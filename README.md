@@ -1,15 +1,15 @@
 # RickshareBD
 
-Rickshare is a Dhaka-focused shared rickshaw concept. The Phase 1 prototype demonstrates the product story with a responsive web UI for riders, drivers, and a basic admin snapshot.
+Rickshare is a Dhaka-focused rider-to-rider rickshaw sharing concept. One rider posts an existing or planned rickshaw trip, and another nearby rider can request to join as a co-passenger.
 
 ## Phase 1 Scope
 
-- Rider journey from destination input to shared ride confirmation
-- Solo vs shared fare comparison
-- Mock matching state for nearby riders and drivers
-- Driver incoming request and earnings-focused flow
-- Cash payment summary with rider savings
-- Basic pilot/admin metrics snapshot
+- Post-a-ride flow for User 1
+- Browse-and-join flow for User 2
+- Ride details page with trust signals and split fare estimate
+- Mock backend APIs for ride posts, join requests, ride status, and ratings
+- Admin snapshot for ride posts and join request monitoring
+- Cash split guidance only; no driver account in the MVP
 
 ## Tech Stack
 

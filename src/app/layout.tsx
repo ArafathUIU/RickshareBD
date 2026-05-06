@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Rickshare | Shared Rickshaw Prototype",
+  title: "Rickshare | Rider-to-Rider Rickshaw Sharing",
   description:
-    "Phase 1 prototype for a Dhaka rickshaw-sharing product that lowers rider cost and increases driver earnings.",
+    "A Dhaka rickshaw-sharing prototype where riders post trips and nearby co-passengers request to join.",
 };
 
 export default function RootLayout({
