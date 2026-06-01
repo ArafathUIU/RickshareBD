@@ -1,71 +1,81 @@
-import Link from "next/link";
-import { getAdminStats, joinRequests, ridePosts } from "@/lib/rickshare-data";
+export const dynamic = "force-dynamic";
 
-export default function AdminPage() {
-  const stats = getAdminStats();
+import Link from "next/link";
+import { getAdminStats, getAllRides } from "@/lib/rickshare-data";
+
+export default async function AdminPage() {
+  const stats = await getAdminStats();
+  const ridePosts = await getAllRides();
+
   const statCards = [
-    ["Open ride posts", stats.openRides],
-    ["Pending join requests", stats.joinRequests],
-    ["Avg. split fare", `${stats.averageSplitFare} taka`],
-    ["Completed shares", stats.completedShares],
+    { label: "Open rides", value: stats.openRides },
+    { label: "Pending requests", value: stats.joinRequests },
+    { label: "Avg split fare", value: `${stats.averageSplitFare} taka` },
+    { label: "Completed shares", value: stats.completedShares },
   ];
 
   return (
-    <main className="min-h-screen bg-[#f7f2e8] px-5 py-6 text-[#1e1a14] sm:px-8 lg:px-12">
-      <div className="mx-auto max-w-7xl">
-        <nav className="flex items-center justify-between rounded-full bg-white/85 px-5 py-3 shadow-sm">
-          <Link href="/" className="text-lg font-black">Rickshare Admin</Link>
-          <Link href="/rides" className="rounded-full bg-[#123c2f] px-5 py-2 text-sm font-black text-white">
+    <main className="min-h-screen bg-white text-[#1e1a14]">
+      <div className="mx-auto max-w-7xl px-5 py-5 sm:px-8 lg:px-12">
+        <nav className="flex items-center justify-between rounded-full bg-[#fbf7ef] px-5 py-2.5">
+          <Link href="/" className="text-base font-bold">Rickshare Admin</Link>
+          <Link href="/rides" className="rounded-full bg-[#123c2f] px-5 py-2 text-sm font-bold text-white transition hover:brightness-110">
             Browse app
           </Link>
         </nav>
+      </div>
 
-        <section className="py-12">
-          <p className="text-sm font-black uppercase tracking-[0.22em] text-[#1f6b52]">Rider-to-rider pilot</p>
-          <h1 className="mt-3 text-5xl font-black tracking-[-0.06em] sm:text-6xl">
-            Monitor ride posts, requests, and trust signals.
-          </h1>
-        </section>
+      <section className="mx-auto max-w-7xl px-5 pb-6 pt-4 sm:px-8 lg:px-12">
+        <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#1f6b52]">Rider-to-rider pilot</p>
+        <h1 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+          Monitor ride posts, requests, and trust signals.
+        </h1>
+      </section>
 
-        <section className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {statCards.map(([label, value]) => (
-            <div key={label} className="rounded-[2rem] bg-white p-5 shadow-sm">
-              <p className="text-sm font-black uppercase tracking-[0.18em] text-[#9a8c77]">{label}</p>
-              <p className="mt-3 text-4xl font-black tracking-[-0.04em]">{value}</p>
+      <section className="mx-auto max-w-7xl px-5 pb-6 sm:px-8 lg:px-12">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {statCards.map((card) => (
+            <div key={card.label} className="rounded-2xl bg-[#fbf7ef] p-5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#9a8c77]">{card.label}</p>
+              <p className="mt-2 text-3xl font-bold">{card.value}</p>
             </div>
           ))}
-        </section>
+        </div>
+      </section>
 
-        <section className="grid gap-5 py-10 lg:grid-cols-[1fr_0.85fr]">
-          <div className="rounded-[2rem] bg-white p-6 shadow-sm">
-            <h2 className="text-3xl font-black tracking-[-0.03em]">Recent ride posts</h2>
-            <div className="mt-5 grid gap-4">
-              {ridePosts.map((ride) => (
-                <div key={ride.id} className="rounded-3xl bg-[#f7f2e8] p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <p className="font-black">{ride.posterName}: {ride.pickup} to {ride.destination}</p>
-                    <span className="rounded-full bg-white px-3 py-1 text-xs font-black text-[#1f6b52]">{ride.status}</span>
-                  </div>
-                  <p className="mt-2 text-sm font-bold text-[#6d6254]">{ride.safetyTag}</p>
+      <section className="mx-auto max-w-7xl grid gap-5 px-5 pb-16 lg:grid-cols-[1fr_0.85fr] sm:px-8 lg:px-12">
+        <div className="rounded-3xl bg-[#fbf7ef] p-6">
+          <h2 className="text-xl font-bold tracking-tight">Recent ride posts</h2>
+          <div className="mt-4 grid gap-3">
+            {ridePosts.map((ride) => (
+              <div key={ride.id} className="rounded-2xl bg-white p-4 shadow-sm">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="text-sm font-semibold">{ride.posterName}: {ride.pickup} to {ride.destination}</p>
+                  <span className="rounded-full bg-[#fbf7ef] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-[#1f6b52]">{ride.status}</span>
                 </div>
-              ))}
-            </div>
+                <p className="mt-1.5 text-xs font-medium text-[#6d6254]">{ride.safetyTag}</p>
+              </div>
+            ))}
           </div>
+        </div>
 
-          <div className="rounded-[2rem] bg-[#123c2f] p-6 text-white shadow-sm">
-            <h2 className="text-3xl font-black tracking-[-0.03em]">Join queue</h2>
-            <div className="mt-5 grid gap-4">
-              {joinRequests.map((request) => (
-                <div key={request.id} className="rounded-3xl bg-white/10 p-4">
-                  <p className="font-black text-[#f6c15b]">{request.requesterName}</p>
-                  <p className="mt-2 text-sm font-semibold leading-6 text-white/75">{request.message}</p>
-                  <p className="mt-3 text-xs font-black uppercase tracking-[0.18em] text-white/50">{request.status}</p>
+        <div className="rounded-3xl bg-[#123c2f] p-6 text-white">
+          <h2 className="text-xl font-bold tracking-tight">Join queue</h2>
+          <div className="mt-4 grid gap-3">
+            {ridePosts.flatMap((ride) => ride.joinRequests).length === 0 ? (
+              <p className="text-sm font-medium text-white/60">No join requests yet.</p>
+            ) : (
+              ridePosts.flatMap((ride) => ride.joinRequests).map((request) => (
+                <div key={request.id} className="rounded-2xl bg-white/10 p-4">
+                  <p className="text-sm font-bold text-[#f6c15b]">{request.requesterName}</p>
+                  <p className="mt-1.5 text-xs font-medium leading-relaxed text-white/75">{request.message}</p>
+                  <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-white/50">{request.status}</p>
                 </div>
-              ))}
-            </div>
+              ))
+            )}
           </div>
-        </section>
-      </div>
+        </div>
+      </section>
     </main>
   );
 }
