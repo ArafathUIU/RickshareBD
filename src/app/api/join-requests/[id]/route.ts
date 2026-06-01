@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { joinRequests } from "@/lib/rickshare-data";
+import { updateJoinRequest } from "@/lib/rickshare-data";
 
 type Context = {
   params: Promise<{ id: string }>;
@@ -8,17 +8,12 @@ type Context = {
 export async function PATCH(request: Request, context: Context) {
   const { id } = await context.params;
   const body = await request.json().catch(() => ({}));
-  const joinRequest = joinRequests.find((requestItem) => requestItem.id === id);
 
-  if (!joinRequest) {
-    return NextResponse.json({ message: "Join request not found" }, { status: 404 });
-  }
+  const status = body.status === "rejected" ? "rejected" : "accepted";
+  const joinRequest = await updateJoinRequest(id, status);
 
   return NextResponse.json({
-    joinRequest: {
-      ...joinRequest,
-      status: body.status === "rejected" ? "rejected" : "accepted",
-    },
-    message: "Join request decision saved in mock backend.",
+    joinRequest,
+    message: "Join request decision saved.",
   });
 }
