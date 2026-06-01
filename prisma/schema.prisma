@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model RidePost {
+  id            String   @id @default(cuid())
+  posterName    String
+  posterRating  Float    @default(4.5)
+  pickup        String
+  destination   String
+  startTime     String
+  totalFare     Int
+  seatsOpen     Int      @default(1)
+  status        String   @default("open")
+  notes         String   @default("")
+  routeMatch    String   @default("")
+  safetyTag     String   @default("")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  joinRequests  JoinRequest[]
+  ratings       Rating[]
+}
+
+model JoinRequest {
+  id              String   @id @default(cuid())
+  rideId          String
+  requesterName   String
+  requesterRating Float    @default(4.5)
+  status          String   @default("pending")
+  message         String   @default("")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  ride            RidePost @relation(fields: [rideId], references: [id], onDelete: Cascade)
+}
+
+model Rating {
+  id        String   @id @default(cuid())
+  rideId    String
+  score     Int      @default(5)
+  note      String   @default("")
+  createdAt DateTime @default(now())
+
+  ride      RidePost @relation(fields: [rideId], references: [id], onDelete: Cascade)
+}
