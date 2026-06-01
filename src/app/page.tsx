@@ -1,158 +1,184 @@
+export const dynamic = "force-dynamic";
+
 import Link from "next/link";
-import { getAdminStats, getSavings, getSplitFare, ridePosts } from "@/lib/rickshare-data";
+import { getAdminStats, getAllRides, getSavings, getSplitFare } from "@/lib/rickshare-data";
 
 const journey = [
-  "User 1 posts a rickshaw route and fare",
-  "User 2 browses nearby compatible ride posts",
-  "User 2 sends a join request",
-  "User 1 accepts the co-passenger",
-  "Both riders split the fare in cash",
+  { title: "Post your route", desc: "Share where you're going and how much the rickshaw costs." },
+  { title: "Browse nearby riders", desc: "See who's heading the same direction and split the fare." },
+  { title: "Request to join", desc: "Send a quick message and wait for the poster to accept." },
+  { title: "Meet and ride", desc: "Hop on together and split the fare in cash — simple." },
 ];
 
-export default function Home() {
-  const featuredRide = ridePosts[0];
-  const stats = getAdminStats();
+export default async function Home() {
+  const rides = await getAllRides();
+  const featuredRide = rides[0];
+  const stats = await getAdminStats();
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#f7f2e8] text-[#1e1a14]">
-      <section className="relative px-5 py-6 sm:px-8 lg:px-12">
-        <div className="absolute inset-x-0 top-0 -z-10 h-[620px] bg-[radial-gradient(circle_at_30%_20%,#f6c15b_0,#f6c15b_23%,transparent_24%),linear-gradient(135deg,#123c2f,#1f6b52_58%,#f7f2e8_59%)]" />
-        <nav className="mx-auto flex max-w-7xl items-center justify-between rounded-full border border-white/30 bg-white/85 px-5 py-3 shadow-sm backdrop-blur">
-          <Link href="/" className="flex items-center gap-3">
-            <div className="flex size-10 items-center justify-center rounded-full bg-[#123c2f] text-lg font-black text-[#f6c15b]">
-              R
+    <main className="min-h-screen bg-white text-[#1e1a14]">
+      {/* Hero */}
+      <section className="relative overflow-hidden bg-[#123c2f] px-5 pb-16 pt-6 sm:px-8 lg:px-12">
+        <div className="mx-auto max-w-7xl">
+          <nav className="flex items-center justify-between">
+            <Link href="/" className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-full bg-[#f6c15b] text-lg font-bold text-[#123c2f]">
+                R
+              </div>
+              <div>
+                <p className="text-lg font-bold tracking-tight text-white">Rickshare</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#f6c15b]">
+                  Dhaka
+                </p>
+              </div>
+            </Link>
+            <div className="hidden items-center gap-3 sm:flex">
+              <Link className="rounded-full px-4 py-2 text-sm font-semibold text-white/90 hover:text-white" href="/rides">
+                Browse rides
+              </Link>
+              <Link className="rounded-full bg-[#f6c15b] px-5 py-2 text-sm font-bold text-[#123c2f] transition hover:brightness-105" href="/post-ride">
+                Post ride
+              </Link>
             </div>
+          </nav>
+
+          <div className="mt-14 grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:mt-20">
             <div>
-              <p className="text-lg font-black tracking-tight">Rickshare</p>
-              <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#1f6b52]">
-                Rider-to-rider sharing
+              <div className="mb-5 inline-flex rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-semibold text-[#f6c15b] backdrop-blur-sm">
+                Rider-to-rider rickshaw sharing
+              </div>
+              <h1 className="max-w-xl text-4xl font-bold leading-[1.1] tracking-tight text-white sm:text-5xl lg:text-[52px] lg:leading-[1.12]">
+                Post your rickshaw. Let another rider join.
+              </h1>
+              <p className="mt-5 max-w-md text-base font-medium leading-relaxed text-white/70">
+                One rider posts an existing or planned trip, another nearby rider requests to join, and both split the fare as co-passengers.
               </p>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link href="/post-ride" className="rounded-full bg-[#f6c15b] px-6 py-3 text-center text-sm font-bold text-[#123c2f] shadow-lg transition hover:brightness-105">
+                  Post a ride
+                </Link>
+                <Link href="/rides" className="rounded-full border border-white/30 px-6 py-3 text-center text-sm font-bold text-white transition hover:bg-white/10">
+                  Find a co-ride
+                </Link>
+              </div>
             </div>
-          </Link>
-          <div className="hidden items-center gap-2 sm:flex">
-            <Link className="rounded-full px-4 py-2 text-sm font-black text-[#123c2f]" href="/rides">
-              Browse rides
-            </Link>
-            <Link className="rounded-full bg-[#123c2f] px-5 py-2 text-sm font-black text-white" href="/post-ride">
-              Post ride
-            </Link>
-          </div>
-        </nav>
 
-        <div className="mx-auto grid max-w-7xl gap-10 py-14 lg:grid-cols-[1.02fr_0.98fr] lg:items-center lg:py-20">
-          <div>
-            <div className="mb-6 inline-flex rounded-full border border-white/50 bg-white/85 px-4 py-2 text-sm font-bold text-[#123c2f] shadow-sm">
-              Corrected MVP: no driver account
-            </div>
-            <h1 className="max-w-4xl text-5xl font-black leading-[0.98] tracking-[-0.06em] text-white sm:text-6xl lg:text-7xl">
-              Post your rickshaw. Let another rider join.
-            </h1>
-            <p className="mt-6 max-w-2xl text-lg font-medium leading-8 text-white/85">
-              Rickshare is a rider-to-rider coordination app. One rider posts an
-              existing or planned rickshaw trip, another nearby rider requests to
-              join, and both split the fare as co-passengers.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Link href="/post-ride" className="rounded-full bg-[#f6c15b] px-6 py-3 text-center font-black text-[#123c2f] shadow-lg shadow-black/10 transition hover:-translate-y-0.5">
-                Post a ride
-              </Link>
-              <Link href="/rides" className="rounded-full border border-white/45 px-6 py-3 text-center font-black text-white transition hover:bg-white/10">
-                Find a co-ride
-              </Link>
-            </div>
+            {featuredRide ? (
+              <div className="rounded-3xl bg-[#1e1a14] p-2.5 shadow-2xl">
+                <div className="rounded-[1.4rem] bg-[#fbf7ef] p-5">
+                  <div className="mb-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs font-bold text-[#1f6b52]">Posted by {featuredRide.posterName}</p>
+                      <p className="text-xs text-[#6d6254]">Rating {featuredRide.posterRating} / 5</p>
+                    </div>
+                    <span className="rounded-full bg-[#e6f3ec] px-3 py-1 text-[11px] font-bold text-[#1f6b52]">
+                      {featuredRide.seatsOpen} seat open
+                    </span>
+                  </div>
+                  <div className="rounded-2xl bg-white p-4 shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#9a8c77]">Pickup</p>
+                    <p className="mt-1 text-sm font-semibold">{featuredRide.pickup}</p>
+                    <div className="my-3 h-px bg-[#eee4d6]" />
+                    <p className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#9a8c77]">Destination</p>
+                    <p className="mt-1 text-xl font-bold">{featuredRide.destination}</p>
+                  </div>
+                  <div className="mt-3 grid grid-cols-2 gap-2.5">
+                    <div className="rounded-2xl border border-[#eadfce] bg-white p-4">
+                      <p className="text-[10px] font-bold uppercase text-[#9a8c77]">Full fare</p>
+                      <p className="mt-1 text-2xl font-bold">{featuredRide.totalFare}</p>
+                      <p className="text-xs font-medium text-[#6d6254]">taka</p>
+                    </div>
+                    <div className="rounded-2xl bg-[#123c2f] p-4 text-white ring-2 ring-[#f6c15b]">
+                      <p className="text-[10px] font-bold uppercase text-[#f6c15b]">Your split</p>
+                      <p className="mt-1 text-2xl font-bold">{getSplitFare(featuredRide.totalFare)}</p>
+                      <p className="text-xs font-medium text-white/70">save {getSavings(featuredRide.totalFare)} taka</p>
+                    </div>
+                  </div>
+                  <Link href={`/rides/${featuredRide.id}`} className="mt-3 block w-full rounded-2xl bg-[#f6c15b] py-3.5 text-center text-sm font-bold text-[#123c2f] transition hover:brightness-105">
+                    Request to Join
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="rounded-3xl bg-[#1e1a14] p-8 text-white">
+                <p className="text-center text-sm font-medium text-white/60">No rides posted yet.</p>
+                <Link href="/post-ride" className="mt-4 block w-full rounded-full bg-[#f6c15b] py-3 text-center text-sm font-bold text-[#123c2f]">
+                  Post the first ride
+                </Link>
+              </div>
+            )}
           </div>
+        </div>
+      </section>
 
-          <div className="rounded-[2.5rem] bg-[#1e1a14] p-3 shadow-2xl shadow-black/30">
-            <div className="rounded-[2rem] bg-[#fbf7ef] p-5">
-              <div className="mb-5 flex items-center justify-between">
+      {/* How it works */}
+      <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8 lg:px-12">
+        <div className="max-w-xl">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#1f6b52]">How it works</p>
+          <h2 className="mt-2 text-3xl font-bold tracking-tight sm:text-4xl">
+            Two riders coordinate. The app does not manage drivers.
+          </h2>
+          <p className="mt-3 text-base font-medium leading-relaxed text-[#6d6254]">
+            Rickshare helps people already waving down rickshaws publish their route and split the cost with someone nearby.
+          </p>
+        </div>
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {journey.map((step, index) => (
+            <article key={step.title} className="rounded-3xl bg-[#fbf7ef] p-5">
+              <div className="mb-4 flex size-10 items-center justify-center rounded-full bg-[#123c2f] text-sm font-bold text-[#f6c15b]">
+                {index + 1}
+              </div>
+              <h3 className="text-base font-bold">{step.title}</h3>
+              <p className="mt-1 text-sm font-medium leading-relaxed text-[#6d6254]">{step.desc}</p>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* Dark band - Backend/API info */}
+      <section className="bg-[#123c2f] px-5 py-14 text-white sm:px-8 lg:px-12">
+        <div className="mx-auto max-w-7xl">
+          <div className="grid gap-8 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#f6c15b]">Live backend</p>
+              <h2 className="mt-2 text-3xl font-bold tracking-tight">Real database. Real ride posts and join requests.</h2>
+              <div className="mt-6 grid gap-2.5 sm:grid-cols-2">
+                {[
+                  "POST /api/rides",
+                  "GET /api/rides",
+                  "POST /api/rides/:id/join-requests",
+                  "PATCH /api/join-requests/:id",
+                ].map((endpoint) => (
+                  <div key={endpoint} className="rounded-xl bg-white/10 px-4 py-3 text-sm font-semibold backdrop-blur-sm">
+                    {endpoint}
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-3xl bg-white/10 p-6 backdrop-blur-sm">
+              <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#f6c15b]">Pilot snapshot</p>
+              <div className="mt-4 grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm font-black text-[#1f6b52]">Posted by {featuredRide.posterName}</p>
-                  <p className="text-xs font-semibold text-[#6d6254]">Rating {featuredRide.posterRating} / 5</p>
+                  <p className="text-3xl font-bold">{stats.openRides}</p>
+                  <p className="text-xs font-medium text-white/60">Open rides</p>
                 </div>
-                <div className="rounded-full bg-[#e6f3ec] px-3 py-1 text-xs font-black text-[#1f6b52]">
-                  1 seat open
+                <div>
+                  <p className="text-3xl font-bold">{stats.joinRequests}</p>
+                  <p className="text-xs font-medium text-white/60">Pending requests</p>
                 </div>
-              </div>
-              <div className="rounded-3xl bg-white p-4 shadow-sm">
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-[#9a8c77]">Pickup</p>
-                <p className="mt-1 font-bold">{featuredRide.pickup}</p>
-                <div className="my-4 h-px bg-[#eee4d6]" />
-                <p className="text-xs font-black uppercase tracking-[0.2em] text-[#9a8c77]">Destination</p>
-                <p className="mt-1 text-2xl font-black">{featuredRide.destination}</p>
-              </div>
-              <div className="mt-4 grid grid-cols-2 gap-3">
-                <div className="rounded-3xl border border-[#eadfce] bg-white p-4">
-                  <p className="text-xs font-black uppercase text-[#9a8c77]">Full fare</p>
-                  <p className="mt-2 text-3xl font-black">{featuredRide.totalFare}</p>
-                  <p className="text-sm font-bold text-[#6d6254]">taka</p>
+                <div>
+                  <p className="text-3xl font-bold">{stats.averageSplitFare}</p>
+                  <p className="text-xs font-medium text-white/60">Avg split fare (taka)</p>
                 </div>
-                <div className="rounded-3xl bg-[#123c2f] p-4 text-white ring-4 ring-[#f6c15b]">
-                  <p className="text-xs font-black uppercase text-[#f6c15b]">Your split</p>
-                  <p className="mt-2 text-3xl font-black">{getSplitFare(featuredRide.totalFare)}</p>
-                  <p className="text-sm font-bold text-white/70">save {getSavings(featuredRide.totalFare)} taka</p>
+                <div>
+                  <p className="text-3xl font-bold">{stats.completedShares}</p>
+                  <p className="text-xs font-medium text-white/60">Completed shares</p>
                 </div>
               </div>
-              <Link href={`/rides/${featuredRide.id}`} className="mt-4 block w-full rounded-2xl bg-[#f6c15b] py-4 text-center text-lg font-black text-[#123c2f] shadow-sm">
-                Request to Join
+              <Link href="/admin" className="mt-5 inline-flex rounded-full bg-[#f6c15b] px-5 py-2.5 text-sm font-bold text-[#123c2f] transition hover:brightness-105">
+                View admin
               </Link>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-5 py-12 sm:px-8 lg:px-12">
-        <div className="grid gap-5 lg:grid-cols-[0.85fr_1.15fr] lg:items-start">
-          <div>
-            <p className="text-sm font-black uppercase tracking-[0.22em] text-[#1f6b52]">How Rickshare works</p>
-            <h2 className="mt-3 text-4xl font-black tracking-[-0.04em] sm:text-5xl">
-              Two riders coordinate. The app does not manage drivers.
-            </h2>
-            <p className="mt-4 text-lg font-medium leading-8 text-[#6d6254]">
-              The MVP focuses on the real user behavior: people already wave down
-              rickshaws. Rickshare helps them publish the route and split the cost
-              with someone nearby.
-            </p>
-          </div>
-          <div className="grid gap-4 sm:grid-cols-2">
-            {journey.map((step, index) => (
-              <article key={step} className="rounded-[2rem] bg-white p-5 shadow-sm">
-                <div className="mb-6 flex size-11 items-center justify-center rounded-2xl bg-[#123c2f] text-lg font-black text-[#f6c15b]">
-                  {index + 1}
-                </div>
-                <h3 className="text-xl font-black">{step}</h3>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-5 py-12 sm:px-8 lg:px-12">
-        <div className="grid gap-5 lg:grid-cols-3">
-          <div className="rounded-[2rem] bg-[#123c2f] p-6 text-white lg:col-span-2">
-            <p className="text-sm font-black uppercase tracking-[0.22em] text-[#f6c15b]">Backend running in mock mode</p>
-            <h2 className="mt-3 text-4xl font-black tracking-[-0.04em]">APIs now model ride posts and join requests.</h2>
-            <div className="mt-8 grid gap-3 sm:grid-cols-2">
-              {[
-                "POST /api/rides",
-                "GET /api/rides",
-                "POST /api/rides/:id/join-requests",
-                "PATCH /api/join-requests/:id",
-              ].map((endpoint) => (
-                <div key={endpoint} className="rounded-2xl bg-white/10 p-4 font-bold backdrop-blur">
-                  {endpoint}
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="rounded-[2rem] bg-white p-6 shadow-sm">
-            <p className="text-sm font-black uppercase tracking-[0.22em] text-[#9a8c77]">Pilot snapshot</p>
-            <h3 className="mt-3 text-3xl font-black tracking-[-0.03em]">{stats.openRides} open rides</h3>
-            <p className="mt-4 font-medium leading-7 text-[#6d6254]">
-              {stats.joinRequests} pending join request and {stats.averageSplitFare} taka average split fare in mock data.
-            </p>
-            <Link href="/admin" className="mt-6 inline-flex rounded-full bg-[#123c2f] px-5 py-3 font-black text-white">
-              View admin
-            </Link>
           </div>
         </div>
       </section>
