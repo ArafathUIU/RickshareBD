@@ -19,13 +19,32 @@ interface Ride {
   status: string;
   startTime: string;
   seatsOpen: number;
+  notes: string;
+  routeMatch: string;
+  safetyTag: string;
+  joinRequests?: JoinRequest[];
 }
 
-export default function DashboardMap({ rides }: { rides: Ride[] }) {
+interface JoinRequest {
+  id: string;
+  requesterName: string;
+  requesterRating: number;
+  status: string;
+  message: string;
+}
+
+interface Stats {
+  openRides: number;
+  joinRequests: number;
+  averageSplitFare: number;
+  completedShares: number;
+}
+
+export default function DashboardMap({ rides, stats }: { rides: Ride[]; stats: Stats }) {
   const mapRef = useRef<HTMLDivElement>(null);
   const [leafletReady, setLeafletReady] = useState(false);
   const [selectedRide, setSelectedRide] = useState<Ride | null>(null);
-  const [userLocation, setUserLocation] = useState<[number, number] | null>(null);
+  const [activeTab, setActiveTab] = useState<"rides" | "requests">("rides");
   const locationSet = useRef(false);
 
   // Wait for Leaflet
@@ -47,24 +66,23 @@ export default function DashboardMap({ rides }: { rides: Ride[] }) {
   useEffect(() => {
     if (locationSet.current) return;
 
-    const updateLocation = (loc: [number, number]) => {
+    const updateLocation = () => {
       locationSet.current = true;
-      setUserLocation(loc);
     };
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
-        (pos) => updateLocation([pos.coords.latitude, pos.coords.longitude]),
-        () => updateLocation([23.8103, 90.4125])
+        () => updateLocation(),
+        () => updateLocation()
       );
     } else {
-      updateLocation([23.8103, 90.4125]);
+      updateLocation();
     }
   }, []);
 
   // Initialize map
   useEffect(() => {
-    if (!leafletReady || !mapRef.current || !userLocation) return;
+    if (!leafletReady || !mapRef.current) return;
 
     const L = (window as any).L;
     if (!L) return;
@@ -72,20 +90,11 @@ export default function DashboardMap({ rides }: { rides: Ride[] }) {
     const map = L.map(mapRef.current, {
       zoomControl: false,
       attributionControl: false,
-    }).setView(userLocation, 14);
+    }).setView([23.7465, 90.3760], 13);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; OpenStreetMap',
     }).addTo(map);
-
-    // Add user location marker (blue dot)
-    const userIcon = L.divIcon({
-      className: "user-location-marker",
-      html: `<div style="width:16px;height:16px;background:#3b82f6;border:3px solid white;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>`,
-      iconSize: [16, 16],
-      iconAnchor: [8, 8],
-    });
-    L.marker(userLocation, { icon: userIcon }).addTo(map).bindPopup("You are here");
 
     // Add ride markers
     rides.forEach((ride) => {
@@ -94,8 +103,8 @@ export default function DashboardMap({ rides }: { rides: Ride[] }) {
           className: "ride-marker",
           html: `
             <div style="
-              width: 44px;
-              height: 44px;
+              width: 40px;
+              height: 40px;
               background: #f6c15b;
               border: 3px solid #123c2f;
               border-radius: 50%;
@@ -103,7 +112,7 @@ export default function DashboardMap({ rides }: { rides: Ride[] }) {
               align-items: center;
               justify-content: center;
               font-weight: bold;
-              font-size: 12px;
+              font-size: 11px;
               color: #123c2f;
               box-shadow: 0 2px 8px rgba(0,0,0,0.3);
               cursor: pointer;
@@ -111,141 +120,293 @@ export default function DashboardMap({ rides }: { rides: Ride[] }) {
               ${ride.totalFare}৳
             </div>
           `,
-          iconSize: [44, 44],
-          iconAnchor: [22, 22],
+          iconSize: [40, 40],
+          iconAnchor: [20, 20],
         });
 
         const marker = L.marker([ride.pickupLat, ride.pickupLng], { icon: rideIcon }).addTo(map);
         marker.on("click", () => {
           setSelectedRide(ride);
         });
+
+        // Add destination marker too
+        if (ride.destLat && ride.destLng) {
+          const destIcon = L.divIcon({
+            className: "dest-marker",
+            html: `
+              <div style="
+                width: 20px;
+                height: 20px;
+                background: #123c2f;
+                border: 2px solid #f6c15b;
+                border-radius: 50%;
+                box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+              "></div>
+            `,
+            iconSize: [20, 20],
+            iconAnchor: [10, 10],
+          });
+          L.marker([ride.destLat, ride.destLng], { icon: destIcon }).addTo(map);
+          
+          // Draw route line
+          L.polyline([[ride.pickupLat, ride.pickupLng], [ride.destLat, ride.destLng]], {
+            color: "#123c2f",
+            weight: 3,
+            opacity: 0.6,
+            dashArray: "6, 8",
+          }).addTo(map);
+        }
       }
     });
 
     return () => {
       map.remove();
     };
-  }, [leafletReady, userLocation, rides]);
+  }, [leafletReady, rides]);
 
   return (
-    <div className="relative h-screen w-full overflow-hidden bg-[#1a1a2e]">
-      {/* Map container */}
-      <div ref={mapRef} className="absolute inset-0 z-0" />
-
-      {/* Top bar */}
-      <div className="absolute left-0 right-0 top-0 z-10 px-4 pt-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 rounded-full bg-[#123c2f]/90 px-4 py-2.5 backdrop-blur-md">
-            <div className="flex size-8 items-center justify-center rounded-full bg-[#f6c15b] text-sm font-bold text-[#123c2f]">
-              R
+    <div className="min-h-screen bg-[#0a0a0a] text-white">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-[#123c2f]/95 backdrop-blur-md border-b border-white/10">
+        <div className="mx-auto max-w-7xl px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="flex size-10 items-center justify-center rounded-full bg-[#f6c15b] text-lg font-bold text-[#123c2f]">
+                R
+              </div>
+              <div>
+                <h1 className="text-lg font-bold text-white">Rickshare Dashboard</h1>
+                <p className="text-[10px] font-semibold text-[#f6c15b] uppercase tracking-wider">Live Ride Tracking</p>
+              </div>
             </div>
-            <span className="text-sm font-bold text-white">Rickshare</span>
+            <div className="flex items-center gap-2">
+              <Link href="/rides" className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20">
+                List View
+              </Link>
+              <Link href="/post-ride" className="rounded-full bg-[#f6c15b] px-4 py-2 text-sm font-bold text-[#123c2f] transition hover:brightness-105">
+                + Post Ride
+              </Link>
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <Link href="/profile" className="rounded-full bg-white/90 px-4 py-2.5 text-sm font-bold text-[#123c2f] backdrop-blur-md transition hover:bg-white">
-              Profile
-            </Link>
+        </div>
+      </header>
+
+      {/* Stats Bar */}
+      <div className="bg-[#123c2f]/50 border-b border-white/10">
+        <div className="mx-auto max-w-7xl px-4 py-3">
+          <div className="grid grid-cols-4 gap-4">
+            <div className="rounded-xl bg-white/5 p-3 text-center">
+              <p className="text-2xl font-bold text-[#f6c15b]">{stats.openRides}</p>
+              <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Open Rides</p>
+            </div>
+            <div className="rounded-xl bg-white/5 p-3 text-center">
+              <p className="text-2xl font-bold text-[#f6c15b]">{stats.joinRequests}</p>
+              <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Pending Requests</p>
+            </div>
+            <div className="rounded-xl bg-white/5 p-3 text-center">
+              <p className="text-2xl font-bold text-[#f6c15b]">{stats.averageSplitFare}</p>
+              <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Avg Split (৳)</p>
+            </div>
+            <div className="rounded-xl bg-white/5 p-3 text-center">
+              <p className="text-2xl font-bold text-[#f6c15b]">{stats.completedShares}</p>
+              <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Completed</p>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom sheet with ride cards */}
-      <div className="absolute bottom-0 left-0 right-0 z-10">
-        <div className="rounded-t-3xl bg-[#123c2f]/95 p-4 backdrop-blur-md">
-          {/* Drag handle */}
-          <div className="mx-auto mb-3 h-1 w-12 rounded-full bg-white/30" />
-
-          {/* Stats row */}
-          <div className="mb-4 flex items-center justify-between px-2">
-            <div>
-              <p className="text-xs font-bold text-[#f6c15b] uppercase tracking-wide">{rides.length} rides nearby</p>
-              <p className="text-xs text-white/60">Tap a marker to view details</p>
+      {/* Main Content */}
+      <div className="mx-auto max-w-7xl px-4 py-4">
+        <div className="grid gap-4 lg:grid-cols-[1fr_400px]">
+          {/* Map Section */}
+          <div className="space-y-4">
+            <div className="rounded-2xl overflow-hidden border border-white/10 bg-[#1a1a2e] shadow-2xl">
+              <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
+                <h2 className="text-sm font-bold text-[#f6c15b] uppercase tracking-wider">Live Map</h2>
+                <span className="text-xs text-white/50">{rides.length} rides active</span>
+              </div>
+              <div ref={mapRef} className="h-[500px] w-full" />
             </div>
-            <Link href="/rides" className="rounded-full bg-[#f6c15b] px-4 py-2 text-xs font-bold text-[#123c2f] transition hover:brightness-105">
-              List view
-            </Link>
           </div>
 
-          {/* Horizontal scroll ride cards */}
-          <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
-            {rides.map((ride) => (
+          {/* Side Panel */}
+          <div className="space-y-4">
+            {/* Tabs */}
+            <div className="flex rounded-xl bg-white/5 p-1">
               <button
-                key={ride.id}
-                onClick={() => setSelectedRide(ride)}
-                className={`flex-shrink-0 w-64 rounded-2xl p-4 text-left transition ${
-                  selectedRide?.id === ride.id ? "bg-[#f6c15b] text-[#123c2f]" : "bg-white/10 text-white"
+                onClick={() => setActiveTab("rides")}
+                className={`flex-1 rounded-lg py-2 text-sm font-bold transition ${
+                  activeTab === "rides" ? "bg-[#f6c15b] text-[#123c2f]" : "text-white/50 hover:text-white"
                 }`}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm font-bold">{ride.posterName}</span>
-                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                    selectedRide?.id === ride.id ? "bg-[#123c2f] text-[#f6c15b]" : "bg-[#f6c15b] text-[#123c2f]"
-                  }`}>
-                    {ride.totalFare}৳
-                  </span>
-                </div>
-                <p className="mt-1 text-xs text-white/70">{ride.pickup} → {ride.destination}</p>
-                <p className="mt-1 text-[10px] text-white/50">{ride.startTime} • {ride.status}</p>
+                Rides ({rides.length})
               </button>
-            ))}
+              <button
+                onClick={() => setActiveTab("requests")}
+                className={`flex-1 rounded-lg py-2 text-sm font-bold transition ${
+                  activeTab === "requests" ? "bg-[#f6c15b] text-[#123c2f]" : "text-white/50 hover:text-white"
+                }`}
+              >
+                Requests ({rides.reduce((acc, r) => acc + (r.joinRequests?.length || 0), 0)})
+              </button>
+            </div>
+
+            {/* Rides Tab */}
+            {activeTab === "rides" && (
+              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                {rides.map((ride) => (
+                  <div
+                    key={ride.id}
+                    onClick={() => setSelectedRide(ride)}
+                    className={`rounded-xl border p-4 cursor-pointer transition ${
+                      selectedRide?.id === ride.id
+                        ? "border-[#f6c15b] bg-[#f6c15b]/10"
+                        : "border-white/10 bg-white/5 hover:bg-white/10"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="flex size-10 items-center justify-center rounded-full bg-[#123c2f] text-sm font-bold text-[#f6c15b]">
+                          {ride.posterName.charAt(0)}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold">{ride.posterName}</p>
+                          <p className="text-xs text-white/50">{ride.pickup}</p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-lg font-bold text-[#f6c15b]">{ride.totalFare}৳</p>
+                        <p className="text-[10px] text-white/50">{ride.status}</p>
+                      </div>
+                    </div>
+                    <div className="mt-3 flex items-center gap-2 text-xs text-white/50">
+                      <span>→ {ride.destination}</span>
+                    </div>
+                    <div className="mt-2 flex items-center justify-between">
+                      <span className="text-[10px] text-white/30">{ride.startTime}</span>
+                      {ride.joinRequests && ride.joinRequests.length > 0 && (
+                        <span className="rounded-full bg-[#f6c15b]/20 px-2 py-0.5 text-[10px] font-bold text-[#f6c15b]">
+                          {ride.joinRequests.length} request{ride.joinRequests.length > 1 ? "s" : ""}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Requests Tab */}
+            {activeTab === "requests" && (
+              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                {rides.flatMap((r) => r.joinRequests?.map((req) => ({ ...req, ride: r })) || []).length === 0 ? (
+                  <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-center">
+                    <p className="text-sm text-white/50">No join requests yet</p>
+                  </div>
+                ) : (
+                  rides.flatMap((r) => r.joinRequests?.map((req) => ({ ...req, ride: r })) || []).map((req) => (
+                    <div key={req.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="flex size-8 items-center justify-center rounded-full bg-[#123c2f] text-xs font-bold text-[#f6c15b]">
+                            {req.requesterName.charAt(0)}
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold">{req.requesterName}</p>
+                            <p className="text-xs text-white/50">wants to join {req.ride.posterName}&apos;s ride</p>
+                          </div>
+                        </div>
+                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                          req.status === "pending" ? "bg-yellow-500/20 text-yellow-500" :
+                          req.status === "accepted" ? "bg-green-500/20 text-green-500" :
+                          "bg-red-500/20 text-red-500"
+                        }`}>
+                          {req.status}
+                        </span>
+                      </div>
+                      <p className="mt-2 text-xs text-white/50">&ldquo;{req.message}&rdquo;</p>
+                      <div className="mt-2 flex items-center justify-between">
+                        <span className="text-[10px] text-white/30">{req.ride.pickup} → {req.ride.destination}</span>
+                        <Link href={`/rides/${req.ride.id}`} className="text-xs font-bold text-[#f6c15b] hover:underline">
+                          View Ride →
+                        </Link>
+                      </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
-      {/* Selected ride detail overlay */}
+      {/* Selected Ride Modal */}
       {selectedRide && (
-        <div className="absolute inset-0 z-20 flex items-end justify-center bg-black/50 p-4">
-          <div className="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-lg rounded-3xl bg-[#1a1a2e] border border-white/10 p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
-              <h3 className="text-lg font-bold text-[#123c2f]">{selectedRide.posterName}&apos;s Ride</h3>
+              <h3 className="text-xl font-bold text-[#f6c15b]">Ride Details</h3>
               <button
                 onClick={() => setSelectedRide(null)}
-                className="rounded-full bg-[#fbf7ef] p-2 text-sm font-bold text-[#123c2f]"
+                className="rounded-full bg-white/10 p-2 text-sm font-bold text-white hover:bg-white/20"
               >
                 ✕
               </button>
             </div>
-            <div className="rounded-2xl bg-[#fbf7ef] p-4">
+            
+            <div className="rounded-2xl bg-[#123c2f]/50 p-4 border border-white/10">
               <div className="flex items-center gap-3">
-                <div className="flex size-10 items-center justify-center rounded-full bg-[#123c2f] text-sm font-bold text-[#f6c15b]">
+                <div className="flex size-12 items-center justify-center rounded-full bg-[#f6c15b] text-lg font-bold text-[#123c2f]">
                   {selectedRide.posterName.charAt(0)}
                 </div>
                 <div>
-                  <p className="text-sm font-bold">{selectedRide.posterName}</p>
-                  <p className="text-xs text-[#6d6254]">Rating {selectedRide.posterRating}/5</p>
+                  <p className="text-base font-bold">{selectedRide.posterName}</p>
+                  <p className="text-xs text-white/50">Rating {selectedRide.posterRating}/5 • {selectedRide.safetyTag}</p>
                 </div>
               </div>
-              <div className="mt-3 space-y-2">
-                <div className="flex items-center gap-2">
-                  <div className="size-2 rounded-full bg-[#123c2f]" />
-                  <p className="text-sm">{selectedRide.pickup}</p>
+              
+              <div className="mt-4 space-y-3">
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 size-3 rounded-full bg-[#f6c15b]" />
+                  <div>
+                    <p className="text-xs text-white/50">Pickup</p>
+                    <p className="text-sm font-semibold">{selectedRide.pickup}</p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="size-2 rounded-full bg-[#f6c15b]" />
-                  <p className="text-sm font-bold">{selectedRide.destination}</p>
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 size-3 rounded-full bg-[#123c2f] border border-[#f6c15b]" />
+                  <div>
+                    <p className="text-xs text-white/50">Destination</p>
+                    <p className="text-sm font-semibold">{selectedRide.destination}</p>
+                  </div>
                 </div>
               </div>
-              <div className="mt-3 flex gap-3">
-                <div className="flex-1 rounded-xl bg-white p-3 text-center">
-                  <p className="text-xs text-[#6d6254]">Fare</p>
-                  <p className="text-lg font-bold text-[#123c2f]">{selectedRide.totalFare}৳</p>
+
+              <div className="mt-4 grid grid-cols-3 gap-2">
+                <div className="rounded-xl bg-white/5 p-3 text-center">
+                  <p className="text-xs text-white/50">Fare</p>
+                  <p className="text-lg font-bold text-white">{selectedRide.totalFare}৳</p>
                 </div>
-                <div className="flex-1 rounded-xl bg-[#123c2f] p-3 text-center text-white">
-                  <p className="text-xs text-[#f6c15b]">Split</p>
-                  <p className="text-lg font-bold">{Math.ceil(selectedRide.totalFare / 2)}৳</p>
+                <div className="rounded-xl bg-white/5 p-3 text-center">
+                  <p className="text-xs text-white/50">Split</p>
+                  <p className="text-lg font-bold text-[#f6c15b]">{Math.ceil(selectedRide.totalFare / 2)}৳</p>
+                </div>
+                <div className="rounded-xl bg-white/5 p-3 text-center">
+                  <p className="text-xs text-white/50">Time</p>
+                  <p className="text-lg font-bold text-white">{selectedRide.startTime}</p>
                 </div>
               </div>
             </div>
+
             <div className="mt-4 flex gap-3">
               <Link
                 href={`/rides/${selectedRide.id}`}
                 className="flex-1 rounded-full bg-[#f6c15b] py-3 text-center text-sm font-bold text-[#123c2f] transition hover:brightness-105"
               >
-                View Details
+                Full Details
               </Link>
               <button
                 onClick={() => setSelectedRide(null)}
-                className="rounded-full border border-[#eadfce] px-5 py-3 text-sm font-bold text-[#6d6254]"
+                className="rounded-full border border-white/20 px-6 py-3 text-sm font-bold text-white/50 hover:text-white"
               >
                 Close
               </button>
@@ -253,19 +414,6 @@ export default function DashboardMap({ rides }: { rides: Ride[] }) {
           </div>
         </div>
       )}
-
-      {/* Floating Post Ride button */}
-      <div className="absolute bottom-48 right-4 z-10">
-        <Link
-          href="/post-ride"
-          className="flex size-14 items-center justify-center rounded-full bg-[#f6c15b] shadow-lg shadow-black/30 transition hover:scale-105"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="size-6 text-[#123c2f]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="12" y1="5" x2="12" y2="19" />
-            <line x1="5" y1="12" x2="19" y2="12" />
-          </svg>
-        </Link>
-      </div>
     </div>
   );
 }
