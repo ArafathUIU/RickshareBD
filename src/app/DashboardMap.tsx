@@ -175,184 +175,197 @@ export default function DashboardMap({ rides, stats }: { rides: Ride[]; stats: S
   }, [leafletReady, rides]);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-[#123c2f]/95 backdrop-blur-md border-b border-white/10">
-        <div className="mx-auto max-w-7xl px-4 py-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-full bg-[#f6c15b] text-lg font-bold text-[#123c2f]">
-                R
+    <div className="relative min-h-screen text-white overflow-hidden">
+      {/* FULL SCREEN MAP BACKGROUND */}
+      <div ref={mapRef} className="absolute inset-0 z-0" />
+
+      {/* OVERLAY CONTENT */}
+      <div className="relative z-10 flex flex-col min-h-screen bg-gradient-to-b from-black/70 via-black/50 to-black/70">
+        {/* Header */}
+        <header className="bg-[#123c2f]/90 backdrop-blur-md border-b border-white/10">
+          <div className="mx-auto max-w-7xl px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex size-10 items-center justify-center rounded-full bg-[#f6c15b] text-lg font-bold text-[#123c2f]">
+                  R
+                </div>
+                <div>
+                  <h1 className="text-lg font-bold text-white">Rickshare Dashboard</h1>
+                  <p className="text-[10px] font-semibold text-[#f6c15b] uppercase tracking-wider">Live Satellite Tracking</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-lg font-bold text-white">Rickshare Dashboard</h1>
-                <p className="text-[10px] font-semibold text-[#f6c15b] uppercase tracking-wider">Live Ride Tracking</p>
+              <div className="flex items-center gap-2">
+                <Link href="/rides" className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20">
+                  List View
+                </Link>
+                <Link href="/post-ride" className="rounded-full bg-[#f6c15b] px-4 py-2 text-sm font-bold text-[#123c2f] transition hover:brightness-105">
+                  + Post Ride
+                </Link>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Link href="/rides" className="rounded-full bg-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/20">
-                List View
-              </Link>
-              <Link href="/post-ride" className="rounded-full bg-[#f6c15b] px-4 py-2 text-sm font-bold text-[#123c2f] transition hover:brightness-105">
-                + Post Ride
-              </Link>
+          </div>
+        </header>
+
+        {/* Stats Bar */}
+        <div className="bg-[#123c2f]/80 backdrop-blur-sm border-b border-white/10">
+          <div className="mx-auto max-w-7xl px-4 py-3">
+            <div className="grid grid-cols-4 gap-4">
+              <div className="rounded-xl bg-black/40 backdrop-blur-sm p-3 text-center border border-white/10">
+                <p className="text-2xl font-bold text-[#f6c15b]">{stats.openRides}</p>
+                <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Open Rides</p>
+              </div>
+              <div className="rounded-xl bg-black/40 backdrop-blur-sm p-3 text-center border border-white/10">
+                <p className="text-2xl font-bold text-[#f6c15b]">{stats.joinRequests}</p>
+                <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Pending Requests</p>
+              </div>
+              <div className="rounded-xl bg-black/40 backdrop-blur-sm p-3 text-center border border-white/10">
+                <p className="text-2xl font-bold text-[#f6c15b]">{stats.averageSplitFare}</p>
+                <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Avg Split (৳)</p>
+              </div>
+              <div className="rounded-xl bg-black/40 backdrop-blur-sm p-3 text-center border border-white/10">
+                <p className="text-2xl font-bold text-[#f6c15b]">{stats.completedShares}</p>
+                <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Completed</p>
+              </div>
             </div>
           </div>
         </div>
-      </header>
 
-      {/* Stats Bar */}
-      <div className="bg-[#123c2f]/50 border-b border-white/10">
-        <div className="mx-auto max-w-7xl px-4 py-3">
-          <div className="grid grid-cols-4 gap-4">
-            <div className="rounded-xl bg-white/5 p-3 text-center">
-              <p className="text-2xl font-bold text-[#f6c15b]">{stats.openRides}</p>
-              <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Open Rides</p>
-            </div>
-            <div className="rounded-xl bg-white/5 p-3 text-center">
-              <p className="text-2xl font-bold text-[#f6c15b]">{stats.joinRequests}</p>
-              <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Pending Requests</p>
-            </div>
-            <div className="rounded-xl bg-white/5 p-3 text-center">
-              <p className="text-2xl font-bold text-[#f6c15b]">{stats.averageSplitFare}</p>
-              <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Avg Split (৳)</p>
-            </div>
-            <div className="rounded-xl bg-white/5 p-3 text-center">
-              <p className="text-2xl font-bold text-[#f6c15b]">{stats.completedShares}</p>
-              <p className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">Completed</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="mx-auto max-w-7xl px-4 py-4">
-        <div className="grid gap-4 lg:grid-cols-[1fr_400px]">
-          {/* Map Section */}
-          <div className="space-y-4">
-            <div className="rounded-2xl overflow-hidden border border-white/10 bg-[#1a1a2e] shadow-2xl">
-              <div className="flex items-center justify-between px-4 py-3 border-b border-white/10">
-                <h2 className="text-sm font-bold text-[#f6c15b] uppercase tracking-wider">Live Map</h2>
-                <span className="text-xs text-white/50">{rides.length} rides active</span>
+        {/* Main Content */}
+        <div className="flex-1 mx-auto max-w-7xl w-full px-4 py-4">
+          <div className="grid gap-4 lg:grid-cols-[1fr_380px]">
+            {/* Left - Map Area with floating info */}
+            <div className="space-y-4">
+              <div className="rounded-2xl bg-black/40 backdrop-blur-md border border-white/10 p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-sm font-bold text-[#f6c15b] uppercase tracking-wider flex items-center gap-2">
+                    <span className="size-2 rounded-full bg-green-500 animate-pulse" />
+                    Live Tracking
+                  </h2>
+                  <span className="text-xs text-white/50">{rides.length} rides on map</span>
+                </div>
+                <p className="text-xs text-white/50 mb-2">Satellite view showing all active ride pickup locations in Dhaka</p>
+                <div className="flex gap-4 text-xs text-white/30">
+                  <span className="flex items-center gap-1"><span className="size-3 rounded-full bg-[#f6c15b] border border-[#123c2f]" /> Pickup</span>
+                  <span className="flex items-center gap-1"><span className="size-3 rounded-full bg-[#123c2f] border border-[#f6c15b]" /> Destination</span>
+                </div>
               </div>
-              <div ref={mapRef} className="h-[500px] w-full" />
-            </div>
-          </div>
-
-          {/* Side Panel */}
-          <div className="space-y-4">
-            {/* Tabs */}
-            <div className="flex rounded-xl bg-white/5 p-1">
-              <button
-                onClick={() => setActiveTab("rides")}
-                className={`flex-1 rounded-lg py-2 text-sm font-bold transition ${
-                  activeTab === "rides" ? "bg-[#f6c15b] text-[#123c2f]" : "text-white/50 hover:text-white"
-                }`}
-              >
-                Rides ({rides.length})
-              </button>
-              <button
-                onClick={() => setActiveTab("requests")}
-                className={`flex-1 rounded-lg py-2 text-sm font-bold transition ${
-                  activeTab === "requests" ? "bg-[#f6c15b] text-[#123c2f]" : "text-white/50 hover:text-white"
-                }`}
-              >
-                Requests ({rides.reduce((acc, r) => acc + (r.joinRequests?.length || 0), 0)})
-              </button>
             </div>
 
-            {/* Rides Tab */}
-            {activeTab === "rides" && (
-              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-                {rides.map((ride) => (
-                  <div
-                    key={ride.id}
-                    onClick={() => setSelectedRide(ride)}
-                    className={`rounded-xl border p-4 cursor-pointer transition ${
-                      selectedRide?.id === ride.id
-                        ? "border-[#f6c15b] bg-[#f6c15b]/10"
-                        : "border-white/10 bg-white/5 hover:bg-white/10"
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <div className="flex size-10 items-center justify-center rounded-full bg-[#123c2f] text-sm font-bold text-[#f6c15b]">
-                          {ride.posterName.charAt(0)}
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold">{ride.posterName}</p>
-                          <p className="text-xs text-white/50">{ride.pickup}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-lg font-bold text-[#f6c15b]">{ride.totalFare}৳</p>
-                        <p className="text-[10px] text-white/50">{ride.status}</p>
-                      </div>
-                    </div>
-                    <div className="mt-3 flex items-center gap-2 text-xs text-white/50">
-                      <span>→ {ride.destination}</span>
-                    </div>
-                    <div className="mt-2 flex items-center justify-between">
-                      <span className="text-[10px] text-white/30">{ride.startTime}</span>
-                      {ride.joinRequests && ride.joinRequests.length > 0 && (
-                        <span className="rounded-full bg-[#f6c15b]/20 px-2 py-0.5 text-[10px] font-bold text-[#f6c15b]">
-                          {ride.joinRequests.length} request{ride.joinRequests.length > 1 ? "s" : ""}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                ))}
+            {/* Right Panel - Glassmorphism */}
+            <div className="space-y-4">
+              {/* Tabs */}
+              <div className="flex rounded-xl bg-black/40 backdrop-blur-md border border-white/10 p-1">
+                <button
+                  onClick={() => setActiveTab("rides")}
+                  className={`flex-1 rounded-lg py-2 text-sm font-bold transition ${
+                    activeTab === "rides" ? "bg-[#f6c15b] text-[#123c2f]" : "text-white/50 hover:text-white"
+                  }`}
+                >
+                  Rides ({rides.length})
+                </button>
+                <button
+                  onClick={() => setActiveTab("requests")}
+                  className={`flex-1 rounded-lg py-2 text-sm font-bold transition ${
+                    activeTab === "requests" ? "bg-[#f6c15b] text-[#123c2f]" : "text-white/50 hover:text-white"
+                  }`}
+                >
+                  Requests ({rides.reduce((acc, r) => acc + (r.joinRequests?.length || 0), 0)})
+                </button>
               </div>
-            )}
 
-            {/* Requests Tab */}
-            {activeTab === "requests" && (
-              <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
-                {rides.flatMap((r) => r.joinRequests?.map((req) => ({ ...req, ride: r })) || []).length === 0 ? (
-                  <div className="rounded-xl border border-white/10 bg-white/5 p-6 text-center">
-                    <p className="text-sm text-white/50">No join requests yet</p>
-                  </div>
-                ) : (
-                  rides.flatMap((r) => r.joinRequests?.map((req) => ({ ...req, ride: r })) || []).map((req) => (
-                    <div key={req.id} className="rounded-xl border border-white/10 bg-white/5 p-4">
+              {/* Rides Tab */}
+              {activeTab === "rides" && (
+                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                  {rides.map((ride) => (
+                    <div
+                      key={ride.id}
+                      onClick={() => setSelectedRide(ride)}
+                      className={`rounded-xl border p-4 cursor-pointer transition backdrop-blur-sm ${
+                        selectedRide?.id === ride.id
+                          ? "border-[#f6c15b] bg-[#f6c15b]/20"
+                          : "border-white/10 bg-black/40 hover:bg-black/60"
+                      }`}
+                    >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <div className="flex size-8 items-center justify-center rounded-full bg-[#123c2f] text-xs font-bold text-[#f6c15b]">
-                            {req.requesterName.charAt(0)}
+                          <div className="flex size-10 items-center justify-center rounded-full bg-[#123c2f] text-sm font-bold text-[#f6c15b] border border-[#f6c15b]">
+                            {ride.posterName.charAt(0)}
                           </div>
                           <div>
-                            <p className="text-sm font-bold">{req.requesterName}</p>
-                            <p className="text-xs text-white/50">wants to join {req.ride.posterName}&apos;s ride</p>
+                            <p className="text-sm font-bold">{ride.posterName}</p>
+                            <p className="text-xs text-white/50">{ride.pickup}</p>
                           </div>
                         </div>
-                        <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                          req.status === "pending" ? "bg-yellow-500/20 text-yellow-500" :
-                          req.status === "accepted" ? "bg-green-500/20 text-green-500" :
-                          "bg-red-500/20 text-red-500"
-                        }`}>
-                          {req.status}
-                        </span>
+                        <div className="text-right">
+                          <p className="text-lg font-bold text-[#f6c15b]">{ride.totalFare}৳</p>
+                          <p className="text-[10px] text-white/50">{ride.status}</p>
+                        </div>
                       </div>
-                      <p className="mt-2 text-xs text-white/50">&ldquo;{req.message}&rdquo;</p>
+                      <div className="mt-3 flex items-center gap-2 text-xs text-white/50">
+                        <span>→ {ride.destination}</span>
+                      </div>
                       <div className="mt-2 flex items-center justify-between">
-                        <span className="text-[10px] text-white/30">{req.ride.pickup} → {req.ride.destination}</span>
-                        <Link href={`/rides/${req.ride.id}`} className="text-xs font-bold text-[#f6c15b] hover:underline">
-                          View Ride →
-                        </Link>
+                        <span className="text-[10px] text-white/30">{ride.startTime}</span>
+                        {ride.joinRequests && ride.joinRequests.length > 0 && (
+                          <span className="rounded-full bg-[#f6c15b]/20 px-2 py-0.5 text-[10px] font-bold text-[#f6c15b]">
+                            {ride.joinRequests.length} request{ride.joinRequests.length > 1 ? "s" : ""}
+                          </span>
+                        )}
                       </div>
                     </div>
-                  ))
-                )}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+
+              {/* Requests Tab */}
+              {activeTab === "requests" && (
+                <div className="space-y-3 max-h-[500px] overflow-y-auto pr-1">
+                  {rides.flatMap((r) => r.joinRequests?.map((req) => ({ ...req, ride: r })) || []).length === 0 ? (
+                    <div className="rounded-xl border border-white/10 bg-black/40 backdrop-blur-sm p-6 text-center">
+                      <p className="text-sm text-white/50">No join requests yet</p>
+                    </div>
+                  ) : (
+                    rides.flatMap((r) => r.joinRequests?.map((req) => ({ ...req, ride: r })) || []).map((req) => (
+                      <div key={req.id} className="rounded-xl border border-white/10 bg-black/40 backdrop-blur-sm p-4">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            <div className="flex size-8 items-center justify-center rounded-full bg-[#123c2f] text-xs font-bold text-[#f6c15b] border border-[#f6c15b]">
+                              {req.requesterName.charAt(0)}
+                            </div>
+                            <div>
+                              <p className="text-sm font-bold">{req.requesterName}</p>
+                              <p className="text-xs text-white/50">wants to join {req.ride.posterName}&apos;s ride</p>
+                            </div>
+                          </div>
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
+                            req.status === "pending" ? "bg-yellow-500/20 text-yellow-500" :
+                            req.status === "accepted" ? "bg-green-500/20 text-green-500" :
+                            "bg-red-500/20 text-red-500"
+                          }`}>
+                            {req.status}
+                          </span>
+                        </div>
+                        <p className="mt-2 text-xs text-white/50">&ldquo;{req.message}&rdquo;</p>
+                        <div className="mt-2 flex items-center justify-between">
+                          <span className="text-[10px] text-white/30">{req.ride.pickup} → {req.ride.destination}</span>
+                          <Link href={`/rides/${req.ride.id}`} className="text-xs font-bold text-[#f6c15b] hover:underline">
+                            View Ride →
+                          </Link>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Selected Ride Modal */}
       {selectedRide && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-lg rounded-3xl bg-[#1a1a2e] border border-white/10 p-6 shadow-2xl">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="w-full max-w-lg rounded-3xl bg-[#123c2f]/95 backdrop-blur-xl border border-[#f6c15b]/30 p-6 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
               <h3 className="text-xl font-bold text-[#f6c15b]">Ride Details</h3>
               <button
@@ -363,7 +376,7 @@ export default function DashboardMap({ rides, stats }: { rides: Ride[]; stats: S
               </button>
             </div>
             
-            <div className="rounded-2xl bg-[#123c2f]/50 p-4 border border-white/10">
+            <div className="rounded-2xl bg-black/40 p-4 border border-white/10">
               <div className="flex items-center gap-3">
                 <div className="flex size-12 items-center justify-center rounded-full bg-[#f6c15b] text-lg font-bold text-[#123c2f]">
                   {selectedRide.posterName.charAt(0)}
@@ -392,15 +405,15 @@ export default function DashboardMap({ rides, stats }: { rides: Ride[]; stats: S
               </div>
 
               <div className="mt-4 grid grid-cols-3 gap-2">
-                <div className="rounded-xl bg-white/5 p-3 text-center">
+                <div className="rounded-xl bg-black/40 p-3 text-center border border-white/10">
                   <p className="text-xs text-white/50">Fare</p>
                   <p className="text-lg font-bold text-white">{selectedRide.totalFare}৳</p>
                 </div>
-                <div className="rounded-xl bg-white/5 p-3 text-center">
+                <div className="rounded-xl bg-black/40 p-3 text-center border border-white/10">
                   <p className="text-xs text-white/50">Split</p>
                   <p className="text-lg font-bold text-[#f6c15b]">{Math.ceil(selectedRide.totalFare / 2)}৳</p>
                 </div>
-                <div className="rounded-xl bg-white/5 p-3 text-center">
+                <div className="rounded-xl bg-black/40 p-3 text-center border border-white/10">
                   <p className="text-xs text-white/50">Time</p>
                   <p className="text-lg font-bold text-white">{selectedRide.startTime}</p>
                 </div>
