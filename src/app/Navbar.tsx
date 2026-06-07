@@ -17,9 +17,9 @@ export default async function Navbar() {
       <div className="flex items-center gap-2">
         {user ? (
           <>
-            <span className="hidden text-sm font-medium text-[#6d6254] sm:inline">
+            <Link href="/profile" className="hidden text-sm font-medium text-[#6d6254] sm:inline hover:text-[#123c2f]">
               {user.name}
-            </span>
+            </Link>
             <Link href="/post-ride" className="rounded-full bg-[#123c2f] px-4 py-2 text-sm font-bold text-white transition hover:brightness-110">
               Post ride
             </Link>

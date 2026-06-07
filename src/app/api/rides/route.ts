@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAllRides, createRide } from "@/lib/rickshare-data";
 import { getCurrentUser } from "@/lib/auth";
+import { geocodeAddress } from "@/lib/geo";
 
 export async function GET() {
   const rides = await getAllRides();
@@ -15,16 +16,38 @@ export async function POST(request: Request) {
 
   const body = await request.json().catch(() => ({}));
 
+  let pickupLat = body.pickupLat ? Number(body.pickupLat) : undefined;
+  let pickupLng = body.pickupLng ? Number(body.pickupLng) : undefined;
+  let destLat = body.destLat ? Number(body.destLat) : undefined;
+  let destLng = body.destLng ? Number(body.destLng) : undefined;
+
+  // Auto-geocode if coordinates not provided
+  if (!pickupLat || !pickupLng) {
+    const geo = await geocodeAddress(body.pickup ?? "");
+    if (geo) {
+      pickupLat = geo.lat;
+      pickupLng = geo.lng;
+    }
+  }
+
+  if (!destLat || !destLng) {
+    const geo = await geocodeAddress(body.destination ?? "");
+    if (geo) {
+      destLat = geo.lat;
+      destLng = geo.lng;
+    }
+  }
+
   const ride = await createRide({
     posterId: user.id,
     posterName: user.name,
     posterRating: user.rating,
     pickup: body.pickup ?? "Current location",
-    pickupLat: body.pickupLat ? Number(body.pickupLat) : undefined,
-    pickupLng: body.pickupLng ? Number(body.pickupLng) : undefined,
+    pickupLat,
+    pickupLng,
     destination: body.destination ?? "Destination pending",
-    destLat: body.destLat ? Number(body.destLat) : undefined,
-    destLng: body.destLng ? Number(body.destLng) : undefined,
+    destLat,
+    destLng,
     startTime: body.startTime ?? "Now",
     totalFare: Number(body.totalFare ?? 100),
     seatsOpen: Number(body.seatsOpen ?? 1),
