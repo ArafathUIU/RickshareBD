@@ -1,16 +1,18 @@
-import Link from "next/link";
+import { redirect } from "next/navigation";
+import { getCurrentUser } from "@/lib/auth";
 import PostRideForm from "./PostRideForm";
+import Navbar from "../Navbar";
 
-export default function PostRidePage() {
+export default async function PostRidePage() {
+  const user = await getCurrentUser();
+  if (!user) {
+    redirect("/login?redirect=/post-ride");
+  }
+
   return (
     <main className="min-h-screen bg-white text-[#1e1a14]">
       <div className="mx-auto max-w-5xl px-5 py-5 sm:px-8 lg:px-12">
-        <nav className="flex items-center justify-between rounded-full bg-[#fbf7ef] px-5 py-2.5">
-          <Link href="/" className="text-base font-bold">Rickshare</Link>
-          <Link href="/rides" className="rounded-full bg-[#123c2f] px-5 py-2 text-sm font-bold text-white transition hover:brightness-110">
-            Browse rides
-          </Link>
-        </nav>
+        <Navbar />
       </div>
 
       <section className="mx-auto max-w-5xl px-5 pb-16 pt-4 sm:px-8 lg:px-12">

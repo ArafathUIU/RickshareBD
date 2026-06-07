@@ -17,14 +17,12 @@ export default function PostRideForm() {
     const formData = new FormData(form);
 
     const body = {
-      posterName: String(formData.get("posterName") || ""),
       startTime: String(formData.get("startTime") || ""),
       pickup: String(formData.get("pickup") || ""),
       destination: String(formData.get("destination") || ""),
       totalFare: Number(formData.get("totalFare") || 0),
       notes: String(formData.get("notes") || ""),
       routeMatch: String(formData.get("routeMatch") || ""),
-      safetyTag: "Phone verified",
     };
 
     try {
@@ -58,12 +56,12 @@ export default function PostRideForm() {
       )}
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-1.5 text-sm font-semibold">
-          Your name
-          <input name="posterName" required className="rounded-xl border border-[#eadfce] bg-[#fbf7ef] px-4 py-3 text-sm font-medium outline-none transition focus:border-[#123c2f] focus:ring-1 focus:ring-[#123c2f]" placeholder="Rahim" />
-        </label>
-        <label className="grid gap-1.5 text-sm font-semibold">
           Start time
           <input name="startTime" required className="rounded-xl border border-[#eadfce] bg-[#fbf7ef] px-4 py-3 text-sm font-medium outline-none transition focus:border-[#123c2f] focus:ring-1 focus:ring-[#123c2f]" placeholder="8:45 AM" />
+        </label>
+        <label className="grid gap-1.5 text-sm font-semibold">
+          Total fare (taka)
+          <input name="totalFare" type="number" required min={1} className="rounded-xl border border-[#eadfce] bg-[#fbf7ef] px-4 py-3 text-sm font-medium outline-none transition focus:border-[#123c2f] focus:ring-1 focus:ring-[#123c2f]" placeholder="120" />
         </label>
         <label className="grid gap-1.5 text-sm font-semibold sm:col-span-2">
           Pickup point
@@ -72,10 +70,6 @@ export default function PostRideForm() {
         <label className="grid gap-1.5 text-sm font-semibold sm:col-span-2">
           Destination
           <input name="destination" required className="rounded-xl border border-[#eadfce] bg-[#fbf7ef] px-4 py-3 text-sm font-medium outline-none transition focus:border-[#123c2f] focus:ring-1 focus:ring-[#123c2f]" placeholder="University main gate" />
-        </label>
-        <label className="grid gap-1.5 text-sm font-semibold">
-          Total fare (taka)
-          <input name="totalFare" type="number" required min={1} className="rounded-xl border border-[#eadfce] bg-[#fbf7ef] px-4 py-3 text-sm font-medium outline-none transition focus:border-[#123c2f] focus:ring-1 focus:ring-[#123c2f]" placeholder="120" />
         </label>
         <label className="grid gap-1.5 text-sm font-semibold">
           Route match hint

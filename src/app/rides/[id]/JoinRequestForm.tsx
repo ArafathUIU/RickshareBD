@@ -19,7 +19,6 @@ export default function JoinRequestForm({ rideId }: { rideId: string }) {
     const formData = new FormData(form);
 
     const body = {
-      requesterName: String(formData.get("requesterName") || ""),
       message: String(formData.get("message") || ""),
     };
 
@@ -59,12 +58,6 @@ export default function JoinRequestForm({ rideId }: { rideId: string }) {
           {success}
         </div>
       )}
-      <input
-        name="requesterName"
-        required
-        className="rounded-xl border border-white/10 bg-white/10 px-4 py-3 text-sm font-medium outline-none transition placeholder:text-white/40 focus:border-white/30 focus:ring-1 focus:ring-white/20"
-        placeholder="Your name"
-      />
       <textarea
         name="message"
         required

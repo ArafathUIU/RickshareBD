@@ -3,16 +3,35 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  name          String
+  email         String   @unique
+  passwordHash  String
+  rating        Float    @default(4.5)
+  safetyTag     String   @default("Phone verified")
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  ridePosts     RidePost[]
+  joinRequests  JoinRequest[]
 }
 
 model RidePost {
   id            String   @id @default(cuid())
+  posterId      String
   posterName    String
   posterRating  Float    @default(4.5)
   pickup        String
+  pickupLat     Float?
+  pickupLng     Float?
   destination   String
+  destLat       Float?
+  destLng       Float?
   startTime     String
   totalFare     Int
   seatsOpen     Int      @default(1)
@@ -23,6 +42,7 @@ model RidePost {
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
+  poster        User          @relation(fields: [posterId], references: [id], onDelete: Cascade)
   joinRequests  JoinRequest[]
   ratings       Rating[]
 }
@@ -30,6 +50,7 @@ model RidePost {
 model JoinRequest {
   id              String   @id @default(cuid())
   rideId          String
+  requesterId     String?
   requesterName   String
   requesterRating Float    @default(4.5)
   status          String   @default("pending")
@@ -38,6 +59,7 @@ model JoinRequest {
   updatedAt       DateTime @updatedAt
 
   ride            RidePost @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  requester       User?    @relation(fields: [requesterId], references: [id], onDelete: SetNull)
 }
 
 model Rating {

@@ -2,6 +2,7 @@ export const dynamic = "force-dynamic";
 
 import Link from "next/link";
 import { getAdminStats, getAllRides, getSavings, getSplitFare } from "@/lib/rickshare-data";
+import Navbar from "./Navbar";
 
 const journey = [
   { title: "Post your route", desc: "Share where you're going and how much the rickshaw costs." },
@@ -20,27 +21,9 @@ export default async function Home() {
       {/* Hero */}
       <section className="relative overflow-hidden bg-[#123c2f] px-5 pb-16 pt-6 sm:px-8 lg:px-12">
         <div className="mx-auto max-w-7xl">
-          <nav className="flex items-center justify-between">
-            <Link href="/" className="flex items-center gap-3">
-              <div className="flex size-10 items-center justify-center rounded-full bg-[#f6c15b] text-lg font-bold text-[#123c2f]">
-                R
-              </div>
-              <div>
-                <p className="text-lg font-bold tracking-tight text-white">Rickshare</p>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#f6c15b]">
-                  Dhaka
-                </p>
-              </div>
-            </Link>
-            <div className="hidden items-center gap-3 sm:flex">
-              <Link className="rounded-full px-4 py-2 text-sm font-semibold text-white/90 hover:text-white" href="/rides">
-                Browse rides
-              </Link>
-              <Link className="rounded-full bg-[#f6c15b] px-5 py-2 text-sm font-bold text-[#123c2f] transition hover:brightness-105" href="/post-ride">
-                Post ride
-              </Link>
-            </div>
-          </nav>
+          <div className="text-white">
+            <Navbar />
+          </div>
 
           <div className="mt-14 grid gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-center lg:mt-20">
             <div>

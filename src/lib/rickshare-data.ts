@@ -5,10 +5,15 @@ import { prisma } from "./prisma";
 const mockRidePosts = [
   {
     id: "ride-101",
+    posterId: "user-1",
     posterName: "Rahim",
     posterRating: 4.8,
     pickup: "Dhanmondi 27, cafe gate",
+    pickupLat: 23.7465,
+    pickupLng: 90.3760,
     destination: "University main gate",
+    destLat: 23.7333,
+    destLng: 90.3925,
     startTime: "8:45 AM",
     totalFare: 120,
     seatsOpen: 1,
@@ -22,6 +27,7 @@ const mockRidePosts = [
       {
         id: "join-501",
         rideId: "ride-101",
+        requesterId: null,
         requesterName: "Ayesha",
         requesterRating: 4.9,
         status: "pending",
@@ -33,10 +39,15 @@ const mockRidePosts = [
   },
   {
     id: "ride-102",
+    posterId: "user-2",
     posterName: "Ayesha",
     posterRating: 4.9,
     pickup: "Kalabagan bus stand",
+    pickupLat: 23.7489,
+    pickupLng: 90.3835,
     destination: "Science Lab",
+    destLat: 23.7390,
+    destLng: 90.3900,
     startTime: "9:05 AM",
     totalFare: 90,
     seatsOpen: 1,
@@ -50,10 +61,15 @@ const mockRidePosts = [
   },
   {
     id: "ride-103",
+    posterId: "user-3",
     posterName: "Nabila",
     posterRating: 4.7,
     pickup: "Mohammadpur town hall",
+    pickupLat: 23.7580,
+    pickupLng: 90.3650,
     destination: "Asad Gate",
+    destLat: 23.7680,
+    destLng: 90.3710,
     startTime: "9:20 AM",
     totalFare: 80,
     seatsOpen: 1,
@@ -139,10 +155,15 @@ export async function getRequestsForRide(rideId: string) {
 }
 
 export async function createRide(data: {
+  posterId: string;
   posterName: string;
   posterRating?: number;
   pickup: string;
+  pickupLat?: number;
+  pickupLng?: number;
   destination: string;
+  destLat?: number;
+  destLng?: number;
   startTime: string;
   totalFare: number;
   seatsOpen?: number;
@@ -155,10 +176,15 @@ export async function createRide(data: {
     () =>
       prisma.ridePost.create({
         data: {
+          posterId: data.posterId,
           posterName: data.posterName,
           posterRating: data.posterRating ?? 4.5,
           pickup: data.pickup,
+          pickupLat: data.pickupLat ?? null,
+          pickupLng: data.pickupLng ?? null,
           destination: data.destination,
+          destLat: data.destLat ?? null,
+          destLng: data.destLng ?? null,
           startTime: data.startTime,
           totalFare: data.totalFare,
           seatsOpen: data.seatsOpen ?? 1,
@@ -170,10 +196,15 @@ export async function createRide(data: {
       }),
     {
       id: `ride-mock-${Date.now()}`,
+      posterId: data.posterId,
       posterName: data.posterName,
       posterRating: data.posterRating ?? 4.5,
       pickup: data.pickup,
+      pickupLat: data.pickupLat ?? null,
+      pickupLng: data.pickupLng ?? null,
       destination: data.destination,
+      destLat: data.destLat ?? null,
+      destLng: data.destLng ?? null,
       startTime: data.startTime,
       totalFare: data.totalFare,
       seatsOpen: data.seatsOpen ?? 1,
@@ -189,6 +220,7 @@ export async function createRide(data: {
 
 export async function createJoinRequest(data: {
   rideId: string;
+  requesterId?: string;
   requesterName: string;
   requesterRating?: number;
   message?: string;
@@ -198,6 +230,7 @@ export async function createJoinRequest(data: {
       const request = await prisma.joinRequest.create({
         data: {
           rideId: data.rideId,
+          requesterId: data.requesterId ?? null,
           requesterName: data.requesterName,
           requesterRating: data.requesterRating ?? 4.5,
           message: data.message ?? "",
@@ -213,6 +246,7 @@ export async function createJoinRequest(data: {
     {
       id: `join-mock-${Date.now()}`,
       rideId: data.rideId,
+      requesterId: data.requesterId ?? null,
       requesterName: data.requesterName,
       requesterRating: data.requesterRating ?? 4.5,
       status: "pending",
@@ -241,6 +275,7 @@ export async function updateJoinRequest(id: string, status: "accepted" | "reject
     {
       id,
       rideId: "ride-101",
+      requesterId: null,
       requesterName: "Ayesha",
       requesterRating: 4.9,
       status,
