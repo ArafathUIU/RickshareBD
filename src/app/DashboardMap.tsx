@@ -92,8 +92,18 @@ export default function DashboardMap({ rides, stats }: { rides: Ride[]; stats: S
       attributionControl: false,
     }).setView([23.7465, 90.3760], 13);
 
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; OpenStreetMap',
+    // Satellite imagery layer
+    L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
+      attribution: '&copy; Esri',
+      maxZoom: 19,
+    }).addTo(map);
+
+    // Labels layer on top
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png", {
+      attribution: '&copy; CartoDB',
+      maxZoom: 19,
+      subdomains: 'abcd',
+      opacity: 0.8,
     }).addTo(map);
 
     // Add ride markers
