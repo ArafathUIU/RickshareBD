@@ -17,7 +17,7 @@ const mockRidePosts = [
     startTime: "8:45 AM",
     totalFare: 120,
     seatsOpen: 1,
-    status: "open",
+    status: "open" as const,
     notes: "Rickshaw already hired. Can pick up from nearby roads.",
     routeMatch: "Same direction as New Market and campus area",
     safetyTag: "Verified student email",
@@ -27,10 +27,10 @@ const mockRidePosts = [
       {
         id: "join-501",
         rideId: "ride-101",
-        requesterId: null,
+        requesterId: "user-2",
         requesterName: "Ayesha",
         requesterRating: 4.9,
-        status: "pending",
+        status: "pending" as const,
         message: "I am two streets away and going to the same university gate.",
         createdAt: new Date("2026-06-01T08:05:00Z"),
         updatedAt: new Date("2026-06-01T08:05:00Z"),
@@ -51,7 +51,7 @@ const mockRidePosts = [
     startTime: "9:05 AM",
     totalFare: 90,
     seatsOpen: 1,
-    status: "requested",
+    status: "requested" as const,
     notes: "Planning to hire within 10 minutes if someone joins.",
     routeMatch: "Short detour from Dhanmondi Road 8",
     safetyTag: "Phone verified",
@@ -73,7 +73,7 @@ const mockRidePosts = [
     startTime: "9:20 AM",
     totalFare: 80,
     seatsOpen: 1,
-    status: "open",
+    status: "open" as const,
     notes: "Prefer pickup near the main road to avoid delay.",
     routeMatch: "Direct route, less than 5 min pickup adjustment",
     safetyTag: "3 completed shares",
@@ -119,7 +119,8 @@ async function dbOrFallback<T>(dbCall: () => Promise<T>, fallback: T): Promise<T
   }
 }
 
-export type RideStatus = "open" | "requested" | "confirmed" | "completed";
+export type RideStatus = "open" | "requested" | "confirmed" | "completed" | "cancelled";
+export type RequestStatus = "pending" | "accepted" | "rejected";
 
 export async function getAllRides() {
   return dbOrFallback(
@@ -167,7 +168,7 @@ export async function createRide(data: {
   startTime: string;
   totalFare: number;
   seatsOpen?: number;
-  status?: string;
+  status?: RideStatus;
   notes?: string;
   routeMatch?: string;
   safetyTag?: string;
@@ -220,36 +221,65 @@ export async function createRide(data: {
 
 export async function createJoinRequest(data: {
   rideId: string;
-  requesterId?: string;
+  requesterId: string;
   requesterName: string;
   requesterRating?: number;
   message?: string;
 }) {
   return dbOrFallback(
     async () => {
-      const request = await prisma.joinRequest.create({
-        data: {
-          rideId: data.rideId,
-          requesterId: data.requesterId ?? null,
-          requesterName: data.requesterName,
-          requesterRating: data.requesterRating ?? 4.5,
-          message: data.message ?? "",
-          status: "pending",
-        },
+      return prisma.$transaction(async (tx) => {
+        // Check if ride exists and is open
+        const ride = await tx.ridePost.findUnique({
+          where: { id: data.rideId },
+          select: { status: true, seatsOpen: true },
+        });
+
+        if (!ride) {
+          throw new Error("Ride not found");
+        }
+        if (ride.status !== "open" && ride.status !== "requested") {
+          throw new Error("Ride is no longer open for requests");
+        }
+
+        // Check for duplicate pending request
+        const existing = await tx.joinRequest.findFirst({
+          where: {
+            rideId: data.rideId,
+            requesterId: data.requesterId,
+            status: "pending",
+          },
+        });
+        if (existing) {
+          throw new Error("You already have a pending request for this ride");
+        }
+
+        const request = await tx.joinRequest.create({
+          data: {
+            rideId: data.rideId,
+            requesterId: data.requesterId,
+            requesterName: data.requesterName,
+            requesterRating: data.requesterRating ?? 4.5,
+            message: data.message ?? "",
+            status: "pending",
+          },
+        });
+
+        await tx.ridePost.update({
+          where: { id: data.rideId },
+          data: { status: "requested" },
+        });
+
+        return request;
       });
-      await prisma.ridePost.update({
-        where: { id: data.rideId },
-        data: { status: "requested" },
-      });
-      return request;
     },
     {
       id: `join-mock-${Date.now()}`,
       rideId: data.rideId,
-      requesterId: data.requesterId ?? null,
+      requesterId: data.requesterId,
       requesterName: data.requesterName,
       requesterRating: data.requesterRating ?? 4.5,
-      status: "pending",
+      status: "pending" as const,
       message: data.message ?? "",
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -275,7 +305,7 @@ export async function updateJoinRequest(id: string, status: "accepted" | "reject
     {
       id,
       rideId: "ride-101",
-      requesterId: null,
+      requesterId: "user-2",
       requesterName: "Ayesha",
       requesterRating: 4.9,
       status,
@@ -286,7 +316,7 @@ export async function updateJoinRequest(id: string, status: "accepted" | "reject
   );
 }
 
-export async function updateRideStatus(id: string, status: string) {
+export async function updateRideStatus(id: string, status: RideStatus) {
   return dbOrFallback(
     () => prisma.ridePost.update({ where: { id }, data: { status } }),
     mockRidePosts.find((r) => r.id === id) ?? null,
@@ -295,6 +325,8 @@ export async function updateRideStatus(id: string, status: string) {
 
 export async function createRating(data: {
   rideId: string;
+  ratedById: string;
+  ratedUserId: string;
   score?: number;
   note?: string;
 }) {
@@ -303,6 +335,8 @@ export async function createRating(data: {
       prisma.rating.create({
         data: {
           rideId: data.rideId,
+          ratedById: data.ratedById,
+          ratedUserId: data.ratedUserId,
           score: data.score ?? 5,
           note: data.note ?? "",
         },
@@ -310,6 +344,8 @@ export async function createRating(data: {
     {
       id: `rating-mock-${Date.now()}`,
       rideId: data.rideId,
+      ratedById: data.ratedById,
+      ratedUserId: data.ratedUserId,
       score: data.score ?? 5,
       note: data.note ?? "",
       createdAt: new Date(),

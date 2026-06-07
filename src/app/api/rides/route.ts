@@ -2,6 +2,21 @@ import { NextResponse } from "next/server";
 import { getAllRides, createRide } from "@/lib/rickshare-data";
 import { getCurrentUser } from "@/lib/auth";
 import { geocodeAddress } from "@/lib/geo";
+import { z } from "zod";
+
+const rideSchema = z.object({
+  pickup: z.string().min(1).max(200),
+  destination: z.string().min(1).max(200),
+  startTime: z.string().min(1).max(50),
+  totalFare: z.number().int().min(1).max(100000),
+  seatsOpen: z.number().int().min(1).max(10),
+  notes: z.string().max(1000).optional(),
+  routeMatch: z.string().max(500).optional(),
+  pickupLat: z.number().optional(),
+  pickupLng: z.number().optional(),
+  destLat: z.number().optional(),
+  destLng: z.number().optional(),
+});
 
 export async function GET() {
   const rides = await getAllRides();
@@ -15,23 +30,29 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json().catch(() => ({}));
+  const parsed = rideSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ message: "Invalid ride data", errors: parsed.error.flatten() }, { status: 400 });
+  }
 
-  let pickupLat = body.pickupLat ? Number(body.pickupLat) : undefined;
-  let pickupLng = body.pickupLng ? Number(body.pickupLng) : undefined;
-  let destLat = body.destLat ? Number(body.destLat) : undefined;
-  let destLng = body.destLng ? Number(body.destLng) : undefined;
+  const data = parsed.data;
+
+  let pickupLat = data.pickupLat;
+  let pickupLng = data.pickupLng;
+  let destLat = data.destLat;
+  let destLng = data.destLng;
 
   // Auto-geocode if coordinates not provided
-  if (!pickupLat || !pickupLng) {
-    const geo = await geocodeAddress(body.pickup ?? "");
+  if (pickupLat == null || pickupLng == null) {
+    const geo = await geocodeAddress(data.pickup);
     if (geo) {
       pickupLat = geo.lat;
       pickupLng = geo.lng;
     }
   }
 
-  if (!destLat || !destLng) {
-    const geo = await geocodeAddress(body.destination ?? "");
+  if (destLat == null || destLng == null) {
+    const geo = await geocodeAddress(data.destination);
     if (geo) {
       destLat = geo.lat;
       destLng = geo.lng;
@@ -42,18 +63,18 @@ export async function POST(request: Request) {
     posterId: user.id,
     posterName: user.name,
     posterRating: user.rating,
-    pickup: body.pickup ?? "Current location",
+    pickup: data.pickup,
     pickupLat,
     pickupLng,
-    destination: body.destination ?? "Destination pending",
+    destination: data.destination,
     destLat,
     destLng,
-    startTime: body.startTime ?? "Now",
-    totalFare: Number(body.totalFare ?? 100),
-    seatsOpen: Number(body.seatsOpen ?? 1),
-    status: body.status ?? "open",
-    notes: body.notes ?? "",
-    routeMatch: body.routeMatch ?? "",
+    startTime: data.startTime,
+    totalFare: data.totalFare,
+    seatsOpen: data.seatsOpen,
+    status: "open" as const,
+    notes: data.notes ?? "",
+    routeMatch: data.routeMatch ?? "",
     safetyTag: user.safetyTag ?? "",
   });
 

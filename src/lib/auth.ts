@@ -3,9 +3,11 @@ import { cookies } from "next/headers";
 import { prisma } from "./prisma";
 import bcrypt from "bcryptjs";
 
-const secretKey = new TextEncoder().encode(
-  process.env.SESSION_SECRET || "rickshare-dev-secret-key-change-in-production"
-);
+const secret = process.env.SESSION_SECRET;
+if (!secret) {
+  throw new Error("SESSION_SECRET environment variable is required. Set it in .env or your hosting platform.");
+}
+const secretKey = new TextEncoder().encode(secret);
 
 export async function hashPassword(password: string) {
   return bcrypt.hash(password, 10);
@@ -25,6 +27,7 @@ export async function createSession(userId: string) {
   cookieStore.set("session", token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
     maxAge: 60 * 60 * 24 * 7, // 7 days
     path: "/",
   });
@@ -56,7 +59,7 @@ export async function getCurrentUser() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.userId },
-    select: { id: true, name: true, email: true, rating: true, safetyTag: true },
+    select: { id: true, name: true, email: true, phone: true, rating: true, safetyTag: true, role: true },
   });
 
   return user;

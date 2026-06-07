@@ -1,9 +1,16 @@
 export const dynamic = "force-dynamic";
 
 import { getAdminStats, getAllRides } from "@/lib/rickshare-data";
+import { getCurrentUser } from "@/lib/auth";
 import Navbar from "../Navbar";
+import { redirect } from "next/navigation";
 
 export default async function AdminPage() {
+  const user = await getCurrentUser();
+  if (!user || user.role !== "admin") {
+    redirect("/");
+  }
+
   const stats = await getAdminStats();
   const ridePosts = await getAllRides();
 

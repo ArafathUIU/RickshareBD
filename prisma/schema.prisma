@@ -7,25 +7,48 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum UserRole {
+  user
+  admin
+}
+
+enum RideStatus {
+  open
+  requested
+  confirmed
+  completed
+  cancelled
+}
+
+enum RequestStatus {
+  pending
+  accepted
+  rejected
+}
+
 model User {
   id            String   @id @default(cuid())
   name          String
   email         String   @unique
+  phone         String?
   passwordHash  String
   rating        Float    @default(4.5)
   safetyTag     String   @default("Phone verified")
+  role          UserRole @default(user)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 
   ridePosts     RidePost[]
   joinRequests  JoinRequest[]
+  givenRatings  Rating[] @relation("GivenRatings")
+  receivedRatings Rating[] @relation("ReceivedRatings")
 }
 
 model RidePost {
-  id            String   @id @default(cuid())
+  id            String     @id @default(cuid())
   posterId      String
   posterName    String
-  posterRating  Float    @default(4.5)
+  posterRating  Float      @default(4.5)
   pickup        String
   pickupLat     Float?
   pickupLng     Float?
@@ -34,13 +57,13 @@ model RidePost {
   destLng       Float?
   startTime     String
   totalFare     Int
-  seatsOpen     Int      @default(1)
-  status        String   @default("open")
-  notes         String   @default("")
-  routeMatch    String   @default("")
-  safetyTag     String   @default("")
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  seatsOpen     Int        @default(1)
+  status        RideStatus @default(open)
+  notes         String     @default("")
+  routeMatch    String     @default("")
+  safetyTag     String     @default("")
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
 
   poster        User          @relation(fields: [posterId], references: [id], onDelete: Cascade)
   joinRequests  JoinRequest[]
@@ -48,26 +71,47 @@ model RidePost {
 }
 
 model JoinRequest {
-  id              String   @id @default(cuid())
+  id              String        @id @default(cuid())
   rideId          String
-  requesterId     String?
+  requesterId     String
   requesterName   String
-  requesterRating Float    @default(4.5)
-  status          String   @default("pending")
-  message         String   @default("")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  requesterRating Float         @default(4.5)
+  status          RequestStatus @default(pending)
+  message         String        @default("")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   ride            RidePost @relation(fields: [rideId], references: [id], onDelete: Cascade)
-  requester       User?    @relation(fields: [requesterId], references: [id], onDelete: SetNull)
+  requester       User     @relation(fields: [requesterId], references: [id], onDelete: Cascade)
+
+  @@index([rideId])
+  @@index([requesterId])
 }
 
 model Rating {
-  id        String   @id @default(cuid())
-  rideId    String
-  score     Int      @default(5)
-  note      String   @default("")
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  rideId      String
+  ratedById   String
+  ratedUserId String
+  score       Int      @default(5)
+  note        String   @default("")
+  createdAt   DateTime @default(now())
 
   ride      RidePost @relation(fields: [rideId], references: [id], onDelete: Cascade)
+  ratedBy   User     @relation("GivenRatings", fields: [ratedById], references: [id], onDelete: Cascade)
+  ratedUser User     @relation("ReceivedRatings", fields: [ratedUserId], references: [id], onDelete: Cascade)
+
+  @@unique([rideId, ratedById])
+  @@index([ratedUserId])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(cuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([token])
+  @@index([email])
 }

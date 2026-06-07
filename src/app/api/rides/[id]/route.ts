@@ -1,5 +1,11 @@
 import { NextResponse } from "next/server";
 import { getRideById, getRequestsForRide, updateRideStatus } from "@/lib/rickshare-data";
+import { getCurrentUser } from "@/lib/auth";
+import { z } from "zod";
+
+const patchSchema = z.object({
+  status: z.enum(["open", "requested", "confirmed", "completed", "cancelled"]),
+});
 
 type Context = {
   params: Promise<{ id: string }>;
@@ -18,15 +24,30 @@ export async function GET(_request: Request, context: Context) {
 }
 
 export async function PATCH(request: Request, context: Context) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
   const { id } = await context.params;
-  const body = await request.json().catch(() => ({}));
   const ride = await getRideById(id);
 
   if (!ride) {
     return NextResponse.json({ message: "Ride not found" }, { status: 404 });
   }
 
-  const updated = await updateRideStatus(id, body.status ?? ride.status);
+  // Only the ride poster can update the ride
+  if (ride.posterId !== user.id) {
+    return NextResponse.json({ message: "Forbidden: only the ride poster can update this ride" }, { status: 403 });
+  }
+
+  const body = await request.json().catch(() => ({}));
+  const parsed = patchSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ message: "Invalid status" }, { status: 400 });
+  }
+
+  const updated = await updateRideStatus(id, parsed.data.status);
   return NextResponse.json({
     ride: updated,
     message: "Ride status updated.",

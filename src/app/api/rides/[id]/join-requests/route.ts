@@ -1,10 +1,15 @@
 import { NextResponse } from "next/server";
 import { createJoinRequest } from "@/lib/rickshare-data";
 import { getCurrentUser } from "@/lib/auth";
+import { z } from "zod";
 
 type Context = {
   params: Promise<{ id: string }>;
 };
+
+const requestSchema = z.object({
+  message: z.string().max(1000).optional(),
+});
 
 export async function POST(request: Request, context: Context) {
   const user = await getCurrentUser();
@@ -14,13 +19,17 @@ export async function POST(request: Request, context: Context) {
 
   const { id } = await context.params;
   const body = await request.json().catch(() => ({}));
+  const parsed = requestSchema.safeParse(body);
+  if (!parsed.success) {
+    return NextResponse.json({ message: "Invalid request" }, { status: 400 });
+  }
 
   const joinRequest = await createJoinRequest({
     rideId: id,
     requesterId: user.id,
     requesterName: user.name,
     requesterRating: user.rating,
-    message: body.message ?? "",
+    message: parsed.data.message ?? "",
   });
 
   return NextResponse.json(
