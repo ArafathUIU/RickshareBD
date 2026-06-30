@@ -17,6 +17,17 @@ export default async function Navbar() {
       <div className="flex items-center gap-2">
         {user ? (
           <>
+            <Link href="/rides" className="hidden text-sm font-medium text-[#6d6254] sm:inline hover:text-[#123c2f]">
+              Rides
+            </Link>
+            <Link href="/my-rides" className="hidden text-sm font-medium text-[#6d6254] sm:inline hover:text-[#123c2f]">
+              My Rides
+            </Link>
+            {user.role === "admin" && (
+              <Link href="/admin" className="hidden text-sm font-medium text-[#f6c15b] sm:inline hover:text-[#123c2f]">
+                Admin
+              </Link>
+            )}
             <Link href="/profile" className="hidden text-sm font-medium text-[#6d6254] sm:inline hover:text-[#123c2f]">
               {user.name}
             </Link>
@@ -27,6 +38,9 @@ export default async function Navbar() {
           </>
         ) : (
           <>
+            <Link href="/rides" className="hidden text-sm font-medium text-[#6d6254] sm:inline hover:text-[#123c2f]">
+              Rides
+            </Link>
             <Link href="/login" className="rounded-full px-4 py-2 text-sm font-semibold text-[#123c2f] transition hover:bg-[#fbf7ef]">
               Log in
             </Link>

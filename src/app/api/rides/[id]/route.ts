@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getRideById, getRequestsForRide, updateRideStatus } from "@/lib/rickshare-data";
+import { getRideById, getRequestsForRide, updateRideStatus, deleteRide } from "@/lib/rickshare-data";
 import { getCurrentUser } from "@/lib/auth";
 import { z } from "zod";
 
@@ -52,4 +52,25 @@ export async function PATCH(request: Request, context: Context) {
     ride: updated,
     message: "Ride status updated.",
   });
+}
+
+export async function DELETE(request: Request, context: Context) {
+  const user = await getCurrentUser();
+  if (!user) {
+    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+  }
+
+  const { id } = await context.params;
+  const ride = await getRideById(id);
+
+  if (!ride) {
+    return NextResponse.json({ message: "Ride not found" }, { status: 404 });
+  }
+
+  if (ride.posterId !== user.id) {
+    return NextResponse.json({ message: "Forbidden: only the ride poster can delete this ride" }, { status: 403 });
+  }
+
+  await deleteRide(id);
+  return NextResponse.json({ message: "Ride deleted successfully." });
 }

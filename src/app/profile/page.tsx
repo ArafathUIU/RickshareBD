@@ -4,9 +4,19 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+interface User {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  rating: number;
+  safetyTag: string;
+  role: string;
+}
+
 export default function ProfilePage() {
   const router = useRouter();
-  const [user, setUser] = useState<{ name: string; email: string; rating: number; safetyTag: string } | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -31,6 +41,7 @@ export default function ProfilePage() {
 
     const body = {
       name: String(formData.get("name") || ""),
+      phone: String(formData.get("phone") || ""),
       safetyTag: String(formData.get("safetyTag") || ""),
     };
 
@@ -53,7 +64,10 @@ export default function ProfilePage() {
   if (loading) {
     return (
       <main className="min-h-screen bg-white flex items-center justify-center">
-        <p className="text-sm text-[#6d6254]">Loading...</p>
+        <div className="text-center">
+          <div className="mx-auto mb-3 size-8 animate-spin rounded-full border-2 border-[#123c2f] border-t-transparent" />
+          <p className="text-sm text-[#6d6254]">Loading profile...</p>
+        </div>
       </main>
     );
   }
@@ -64,11 +78,16 @@ export default function ProfilePage() {
     <main className="min-h-screen bg-white text-[#1e1a14]">
       <div className="mx-auto max-w-md px-5 py-12">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex size-12 items-center justify-center rounded-full bg-[#123c2f] text-lg font-bold text-[#f6c15b]">
+          <div className="mx-auto mb-4 flex size-14 items-center justify-center rounded-full bg-[#123c2f] text-xl font-bold text-[#f6c15b]">
             {user.name.charAt(0).toUpperCase()}
           </div>
           <h1 className="text-2xl font-bold">Your profile</h1>
           <p className="mt-1 text-sm text-[#6d6254]">{user.email}</p>
+          {user.role === "admin" && (
+            <span className="mt-2 inline-block rounded-full bg-[#f6c15b] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-[#123c2f]">
+              Admin
+            </span>
+          )}
         </div>
 
         <form onSubmit={handleSubmit} className="rounded-3xl bg-[#fbf7ef] p-6">
@@ -81,6 +100,10 @@ export default function ProfilePage() {
             <label className="grid gap-1.5 text-sm font-semibold">
               Name
               <input name="name" defaultValue={user.name} required className="rounded-xl border border-[#eadfce] bg-white px-4 py-3 text-sm outline-none focus:border-[#123c2f] focus:ring-1 focus:ring-[#123c2f]" />
+            </label>
+            <label className="grid gap-1.5 text-sm font-semibold">
+              Phone number
+              <input name="phone" type="tel" defaultValue={user.phone ?? ""} className="rounded-xl border border-[#eadfce] bg-white px-4 py-3 text-sm outline-none focus:border-[#123c2f] focus:ring-1 focus:ring-[#123c2f]" placeholder="01XXXXXXXXX" />
             </label>
             <label className="grid gap-1.5 text-sm font-semibold">
               Trust signal
@@ -100,11 +123,14 @@ export default function ProfilePage() {
           </button>
         </form>
 
-        <p className="mt-6 text-center text-sm">
-          <Link href="/" className="font-semibold text-[#123c2f] underline">
+        <div className="mt-6 space-y-2 text-center text-sm">
+          <Link href="/" className="block font-semibold text-[#123c2f] underline">
             Back to home
           </Link>
-        </p>
+          <Link href="/rides" className="block font-semibold text-[#123c2f] underline">
+            Browse rides
+          </Link>
+        </div>
       </div>
     </main>
   );

@@ -323,6 +323,13 @@ export async function updateRideStatus(id: string, status: RideStatus) {
   );
 }
 
+export async function deleteRide(id: string) {
+  return dbOrFallback(
+    () => prisma.ridePost.delete({ where: { id } }),
+    mockRidePosts.find((r) => r.id === id) ?? null,
+  );
+}
+
 export async function createRating(data: {
   rideId: string;
   ratedById: string;
