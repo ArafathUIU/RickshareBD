@@ -72,6 +72,20 @@ export default async function RideDetailsPage({ params }: RideDetailsPageProps) 
                 <p className="mt-1 text-lg font-bold">{getSplitFare(ride.totalFare)} taka</p>
               </div>
             </div>
+            {(ride.distanceKm || ride.estimatedDurationMin) && (
+              <div className="mt-3 flex items-center gap-4">
+                {ride.distanceKm && (
+                  <div className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-[#1f6b52] shadow-sm">
+                    {ride.distanceKm} km
+                  </div>
+                )}
+                {ride.estimatedDurationMin && (
+                  <div className="rounded-xl bg-white px-3 py-2 text-xs font-semibold text-[#1f6b52] shadow-sm">
+                    ~{ride.estimatedDurationMin} min
+                  </div>
+                )}
+              </div>
+            )}
 
             <div className="mt-4 rounded-2xl bg-[#e6f3ec] p-4">
               <p className="text-sm font-semibold text-[#123c2f]">{ride.routeMatch}</p>

@@ -62,6 +62,8 @@ model RidePost {
   notes         String     @default("")
   routeMatch    String     @default("")
   safetyTag     String     @default("")
+  distanceKm    Float?
+  estimatedDurationMin Int?
   createdAt     DateTime   @default(now())
   updatedAt     DateTime   @updatedAt
 

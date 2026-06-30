@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAllRides, createRide } from "@/lib/rickshare-data";
 import { getCurrentUser } from "@/lib/auth";
-import { geocodeAddress } from "@/lib/geo";
+import { geocodeAddress, getRouteInfo } from "@/lib/geo";
 import { z } from "zod";
 
 const rideSchema = z.object({
@@ -59,6 +59,17 @@ export async function POST(request: Request) {
     }
   }
 
+  // Calculate distance and duration if we have both coords
+  let distanceKm: number | undefined;
+  let estimatedDurationMin: number | undefined;
+  if (pickupLat != null && pickupLng != null && destLat != null && destLng != null) {
+    const routeInfo = await getRouteInfo({ lat: pickupLat, lng: pickupLng }, { lat: destLat, lng: destLng });
+    if (routeInfo) {
+      distanceKm = routeInfo.distanceKm;
+      estimatedDurationMin = routeInfo.durationMin;
+    }
+  }
+
   const ride = await createRide({
     posterId: user.id,
     posterName: user.name,
@@ -76,6 +87,8 @@ export async function POST(request: Request) {
     notes: data.notes ?? "",
     routeMatch: data.routeMatch ?? "",
     safetyTag: user.safetyTag ?? "",
+    distanceKm,
+    estimatedDurationMin,
   });
 
   return NextResponse.json(

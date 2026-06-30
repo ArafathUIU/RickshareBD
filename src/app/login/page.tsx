@@ -3,18 +3,17 @@
 import { useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get("redirect") || "/";
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    setError("");
 
     const form = e.currentTarget;
     const formData = new FormData(form);
@@ -34,15 +33,16 @@ function LoginForm() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(data.message || "Login failed.");
+        toast.error(data.message || "Login failed.");
         setLoading(false);
         return;
       }
 
+      toast.success("Welcome back!");
       router.push(redirect);
       router.refresh();
     } catch {
-      setError("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
       setLoading(false);
     }
   }
@@ -59,11 +59,6 @@ function LoginForm() {
         </div>
 
         <form onSubmit={handleSubmit} className="rounded-3xl bg-[#fbf7ef] p-6">
-          {error && (
-            <div className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-              {error}
-            </div>
-          )}
           <div className="grid gap-4">
             <label className="grid gap-1.5 text-sm font-semibold">
               Email

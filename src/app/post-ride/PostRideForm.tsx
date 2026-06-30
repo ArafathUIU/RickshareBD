@@ -2,16 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function PostRideForm() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    setError("");
 
     const form = e.currentTarget;
     const formData = new FormData(form);
@@ -35,25 +34,21 @@ export default function PostRideForm() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(data.message || "Failed to post ride. Please try again.");
+        toast.error(data.message || "Failed to post ride. Please try again.");
         setLoading(false);
         return;
       }
 
+      toast.success("Ride posted successfully!");
       router.push(`/rides/${data.ride.id}`);
     } catch {
-      setError("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
       setLoading(false);
     }
   }
 
   return (
     <form onSubmit={handleSubmit} className="rounded-3xl bg-white p-6 shadow-sm ring-1 ring-[#eadfce]">
-      {error && (
-        <div className="mb-4 rounded-xl bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-          {error}
-        </div>
-      )}
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-1.5 text-sm font-semibold">
           Start time

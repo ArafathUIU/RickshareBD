@@ -15,6 +15,8 @@ interface Ride {
   status: string;
   routeMatch: string;
   safetyTag: string;
+  distanceKm?: number | null;
+  estimatedDurationMin?: number | null;
 }
 
 export default function RidesClientPage({ rides }: { rides: Ride[] }) {
@@ -121,6 +123,12 @@ export default function RidesClientPage({ rides }: { rides: Ride[] }) {
                       <p className="text-[10px] font-medium text-white/70">taka</p>
                     </div>
                   </div>
+                  {(ride.distanceKm || ride.estimatedDurationMin) && (
+                    <div className="mt-2 flex items-center gap-3 text-xs text-[#6d6254]">
+                      {ride.distanceKm && <span>{ride.distanceKm} km</span>}
+                      {ride.estimatedDurationMin && <span>~{ride.estimatedDurationMin} min</span>}
+                    </div>
+                  )}
                   <p className="mt-3 text-xs font-medium leading-relaxed text-[#6d6254]">{ride.routeMatch}</p>
                   <Link href={`/rides/${ride.id}`} className="mt-3 block rounded-2xl bg-[#f6c15b] py-3 text-center text-sm font-bold text-[#123c2f] transition hover:brightness-105">
                     View and request

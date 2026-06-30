@@ -2,18 +2,15 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function JoinRequestForm({ rideId }: { rideId: string }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setLoading(true);
-    setError("");
-    setSuccess("");
 
     const form = e.currentTarget;
     const formData = new FormData(form);
@@ -32,32 +29,22 @@ export default function JoinRequestForm({ rideId }: { rideId: string }) {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(data.message || "Failed to send request.");
+        toast.error(data.message || "Failed to send request.");
         setLoading(false);
         return;
       }
 
-      setSuccess("Join request sent! The poster will review it.");
+      toast.success("Join request sent! The poster will review it.");
       form.reset();
       router.refresh();
     } catch {
-      setError("Something went wrong. Please try again.");
-      setLoading(false);
+      toast.error("Something went wrong. Please try again.");
     }
+    setLoading(false);
   }
 
   return (
     <form onSubmit={handleSubmit} className="mt-5 grid gap-2.5">
-      {error && (
-        <div className="rounded-xl bg-red-500/20 px-4 py-2.5 text-sm font-semibold text-white">
-          {error}
-        </div>
-      )}
-      {success && (
-        <div className="rounded-xl bg-[#f6c15b]/20 px-4 py-2.5 text-sm font-semibold text-[#f6c15b]">
-          {success}
-        </div>
-      )}
       <textarea
         name="message"
         required

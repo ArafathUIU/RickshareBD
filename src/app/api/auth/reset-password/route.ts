@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { hashPassword } from "@/lib/auth";
+import { sendPasswordResetEmail } from "@/lib/email";
 import crypto from "crypto";
 
 // Rate limiting map: email -> last request time
@@ -43,8 +44,9 @@ export async function POST(request: Request) {
 
   const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/reset-password?token=${token}`;
 
-  // In production, send email here. For demo, return silently.
-  // DO NOT log tokens in production.
+  // Send email (falls back to warning in dev if SMTP not configured)
+  await sendPasswordResetEmail(email, resetUrl);
+
   return NextResponse.json({ message: "If an account exists, a reset link has been sent." });
 }
 

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 export default function RequestActions({ requestId }: { requestId: string }) {
   const router = useRouter();
@@ -16,12 +17,17 @@ export default function RequestActions({ requestId }: { requestId: string }) {
         body: JSON.stringify({ status }),
       });
 
+      const data = await res.json().catch(() => ({}));
+
       if (res.ok) {
+        toast.success(status === "accepted" ? "Request accepted!" : "Request rejected.");
         router.refresh();
       } else {
+        toast.error(data.message || "Failed to update request.");
         setLoading(false);
       }
     } catch {
+      toast.error("Something went wrong.");
       setLoading(false);
     }
   }

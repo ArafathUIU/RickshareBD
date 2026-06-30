@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { toast } from "sonner";
 
 interface User {
   id: string;
@@ -19,7 +20,6 @@ export default function ProfilePage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState("");
 
   useEffect(() => {
     fetch("/api/user")
@@ -34,7 +34,6 @@ export default function ProfilePage() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSaving(true);
-    setMessage("");
 
     const form = e.currentTarget;
     const formData = new FormData(form);
@@ -54,9 +53,9 @@ export default function ProfilePage() {
     const data = await res.json();
     if (res.ok) {
       setUser(data.user);
-      setMessage("Profile updated successfully.");
+      toast.success("Profile updated successfully.");
     } else {
-      setMessage(data.message || "Failed to update profile.");
+      toast.error(data.message || "Failed to update profile.");
     }
     setSaving(false);
   }
@@ -91,11 +90,6 @@ export default function ProfilePage() {
         </div>
 
         <form onSubmit={handleSubmit} className="rounded-3xl bg-[#fbf7ef] p-6">
-          {message && (
-            <div className={`mb-4 rounded-xl px-4 py-3 text-sm font-semibold ${message.includes("success") ? "bg-[#e6f3ec] text-[#123c2f]" : "bg-red-50 text-red-700"}`}>
-              {message}
-            </div>
-          )}
           <div className="grid gap-4">
             <label className="grid gap-1.5 text-sm font-semibold">
               Name

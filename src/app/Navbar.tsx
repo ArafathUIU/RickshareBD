@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth";
 import LogoutButton from "./LogoutButton";
+import ThemeToggle from "./ThemeToggle";
 
 export default async function Navbar() {
   const user = await getCurrentUser();
@@ -15,6 +16,7 @@ export default async function Navbar() {
       </Link>
 
       <div className="flex items-center gap-2">
+        <ThemeToggle />
         {user ? (
           <>
             <Link href="/rides" className="hidden text-sm font-medium text-[#6d6254] sm:inline hover:text-[#123c2f]">

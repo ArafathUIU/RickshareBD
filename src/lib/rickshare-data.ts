@@ -21,6 +21,8 @@ const mockRidePosts = [
     notes: "Rickshaw already hired. Can pick up from nearby roads.",
     routeMatch: "Same direction as New Market and campus area",
     safetyTag: "Verified student email",
+    distanceKm: 3.2,
+    estimatedDurationMin: 12,
     createdAt: new Date("2026-06-01T08:00:00Z"),
     updatedAt: new Date("2026-06-01T08:00:00Z"),
     joinRequests: [
@@ -55,6 +57,8 @@ const mockRidePosts = [
     notes: "Planning to hire within 10 minutes if someone joins.",
     routeMatch: "Short detour from Dhanmondi Road 8",
     safetyTag: "Phone verified",
+    distanceKm: 2.1,
+    estimatedDurationMin: 8,
     createdAt: new Date("2026-06-01T08:10:00Z"),
     updatedAt: new Date("2026-06-01T08:10:00Z"),
     joinRequests: [],
@@ -77,6 +81,8 @@ const mockRidePosts = [
     notes: "Prefer pickup near the main road to avoid delay.",
     routeMatch: "Direct route, less than 5 min pickup adjustment",
     safetyTag: "3 completed shares",
+    distanceKm: 1.8,
+    estimatedDurationMin: 7,
     createdAt: new Date("2026-06-01T08:15:00Z"),
     updatedAt: new Date("2026-06-01T08:15:00Z"),
     joinRequests: [],
@@ -172,6 +178,8 @@ export async function createRide(data: {
   notes?: string;
   routeMatch?: string;
   safetyTag?: string;
+  distanceKm?: number;
+  estimatedDurationMin?: number;
 }) {
   return dbOrFallback(
     () =>
@@ -193,6 +201,8 @@ export async function createRide(data: {
           notes: data.notes ?? "",
           routeMatch: data.routeMatch ?? "",
           safetyTag: data.safetyTag ?? "",
+          distanceKm: data.distanceKm ?? null,
+          estimatedDurationMin: data.estimatedDurationMin ?? null,
         },
       }),
     {
@@ -213,6 +223,8 @@ export async function createRide(data: {
       notes: data.notes ?? "",
       routeMatch: data.routeMatch ?? "",
       safetyTag: data.safetyTag ?? "",
+      distanceKm: data.distanceKm ?? null,
+      estimatedDurationMin: data.estimatedDurationMin ?? null,
       createdAt: new Date(),
       updatedAt: new Date(),
     },
