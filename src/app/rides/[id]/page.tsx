@@ -7,6 +7,7 @@ import {
   getSavings,
   getSplitFare,
 } from "@/lib/rickshare-data";
+import { getCurrentUser } from "@/lib/auth";
 import JoinRequestForm from "./JoinRequestForm";
 import RequestActions from "./RequestActions";
 import Navbar from "../../Navbar";
@@ -18,13 +19,14 @@ type RideDetailsPageProps = {
 
 export default async function RideDetailsPage({ params }: RideDetailsPageProps) {
   const { id } = await params;
-  const ride = await getRideById(id);
+  const [ride, user] = await Promise.all([getRideById(id), getCurrentUser()]);
 
   if (!ride) {
     notFound();
   }
 
   const requests = await getRequestsForRide(ride.id);
+  const isPoster = user?.id === ride.posterId;
 
   return (
     <main className="min-h-screen bg-white text-[#1e1a14]">
@@ -82,9 +84,11 @@ export default async function RideDetailsPage({ params }: RideDetailsPageProps) 
             <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#f6c15b]">Request to join</p>
             <h2 className="mt-2 text-2xl font-bold tracking-tight">Save {getSavings(ride.totalFare)} taka</h2>
             <p className="mt-2 text-sm font-medium leading-relaxed text-white/70">
-              Send a request to {ride.posterName}. The poster manually accepts before pickup coordination.
+              {isPoster
+                ? "You posted this ride. Manage requests below."
+                : `Send a request to ${ride.posterName}. The poster manually accepts before pickup coordination.`}
             </p>
-            <JoinRequestForm rideId={ride.id} />
+            {!isPoster && <JoinRequestForm rideId={ride.id} />}
             <div className="mt-5 rounded-2xl bg-white/10 p-4">
               <p className="text-xs font-semibold text-white/60">Trust signal</p>
               <p className="mt-1 text-sm font-bold">{ride.safetyTag}</p>
@@ -127,7 +131,7 @@ export default async function RideDetailsPage({ params }: RideDetailsPageProps) 
                     </span>
                   </div>
                   <p className="mt-2 text-sm font-medium leading-relaxed text-[#6d6254]">{request.message}</p>
-                  {request.status === "pending" && (
+                  {isPoster && request.status === "pending" && (
                     <RequestActions requestId={request.id} />
                   )}
                 </div>

@@ -13,9 +13,15 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Rickshare | Rider-to-Rider Rickshaw Sharing",
+  title: "Rickshare | Rider-to-Rider Rickshaw Sharing in Dhaka",
   description:
-    "A Dhaka rickshaw-sharing prototype where riders post trips and nearby co-passengers request to join.",
+    "Share rickshaw rides in Dhaka. Post your trip, find co-passengers nearby, and split the fare. Safe, affordable, and built for university students and daily commuters.",
+  keywords: ["rickshaw sharing", "ride sharing", "Dhaka", "Bangladesh", "rickshare", "split fare", "commute"],
+  openGraph: {
+    title: "Rickshare | Rider-to-Rider Rickshaw Sharing",
+    description: "Share rickshaw rides in Dhaka. Post trips, find co-passengers, split fares.",
+    type: "website",
+  },
 };
 
 export default function RootLayout({

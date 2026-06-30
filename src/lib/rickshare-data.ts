@@ -290,17 +290,35 @@ export async function createJoinRequest(data: {
 export async function updateJoinRequest(id: string, status: "accepted" | "rejected") {
   return dbOrFallback(
     async () => {
-      const request = await prisma.joinRequest.update({
-        where: { id },
-        data: { status },
-      });
-      if (status === "accepted") {
-        await prisma.ridePost.update({
-          where: { id: request.rideId },
-          data: { status: "confirmed", seatsOpen: 0 },
+      return prisma.$transaction(async (tx) => {
+        const request = await tx.joinRequest.update({
+          where: { id },
+          data: { status },
         });
-      }
-      return request;
+
+        if (status === "accepted") {
+          // Get current ride state within transaction
+          const ride = await tx.ridePost.findUnique({
+            where: { id: request.rideId },
+            select: { seatsOpen: true },
+          });
+
+          if (!ride || ride.seatsOpen <= 0) {
+            throw new Error("No seats available");
+          }
+
+          const newSeatsOpen = ride.seatsOpen - 1;
+          await tx.ridePost.update({
+            where: { id: request.rideId },
+            data: {
+              status: newSeatsOpen <= 0 ? "confirmed" : "requested",
+              seatsOpen: newSeatsOpen,
+            },
+          });
+        }
+
+        return request;
+      });
     },
     {
       id,
